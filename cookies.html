@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Policy — IconCopy</title>
+  <meta name="robots" content="index, follow" />
+  <style>
+    :root {
+      --bg:           #f8f7f5;
+      --surface:      #ffffff;
+      --border:       #e4e2de;
+      --text-primary: #1a1917;
+      --text-secondary:#6b6760;
+      --text-muted:   #9e9b96;
+      --accent:       #f59e0b;
+      --radius-md:    12px;
+    }
+    [data-theme="dark"] {
+      --bg:           #141312;
+      --surface:      #1e1d1b;
+      --border:       #2e2c29;
+      --text-primary: #f5f4f2;
+      --text-secondary:#b5b1aa;
+      --text-muted:   #7a7771;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 40px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .back-btn:hover { color: var(--accent); }
+    h1 { font-size: 28px; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .meta-info { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    h2 { font-size: 18px; font-weight: 600; margin: 24px 0 12px 0; }
+    p { font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; }
+    ul { margin-left: 24px; margin-bottom: 16px; color: var(--text-secondary); font-size: 15px; }
+    li { margin-bottom: 8px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    @media (max-width: 600px) {
+      body { padding: 20px 12px; }
+      .container { padding: 24px 16px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-btn">← Back to IconCopy</a>
+    <h1>Cookie Policy</h1>
+    <div class="meta-info">Last Updated: June 12, 2026</div>
+
+    <p>This is the Cookie Policy for <strong>IconCopy</strong>, accessible from your domain platform.</p>
+    
+    <h2>1. What Are Cookies</h2>
+    <p>As is common practice with almost all professional websites, this site uses cookies, which are tiny files that are downloaded to your computer, to improve your experience. This page describes what information they gather, how we use it and why we sometimes need to store these cookies.</p>
+
+    <h2>2. How We Use Cookies & LocalStorage</h2>
+    <p>We use cookies and browser storage arrays for a variety of reasons detailed below. Unfortunately, in most cases, there are no industry standard options for disabling cookies without completely disabling the functionality and features they add to this site.</p>
+    <ul>
+      <li><strong>User Interface Preferences:</strong> To remember your chosen layout configurations like Light Mode or Dark Mode, we save specific keys locally so that your interface renders cleanly on subsequent visits.</li>
+      <li><strong>Recently Copied History:</strong> Your recently used emojis are kept in your browser's sandboxed `LocalStorage` layer so that you can quickly reuse your favorite elements. This tracking never leaves your local system.</li>
+    </ul>
+
+    <h2>3. Third-Party Analytics & Advertising Cookies</h2>
+    <p>In some special cases, we also use cookies provided by trusted third parties. The following section details which third-party cookies you might encounter through this site:</p>
+    <ul>
+      <li><strong>Google AdSense:</strong> The Google AdSense service uses a DART cookie to serve more relevant ads across the web and limit the number of times that a given ad is shown to you. For more information on Google AdSense see the official Google AdSense privacy FAQ.</li>
+    </ul>
+
+    <h2>4. Disabling Cookies</h2>
+    <p>You can prevent the setting of cookies by adjusting the settings on your browser (see your browser Help for how to do this). Be aware that disabling cookies will affect the functionality of this and many other websites that you visit.</p>
+  </div>
+
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</body>
+</html>

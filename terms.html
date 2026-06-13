@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service — IconCopy</title>
+  <meta name="robots" content="index, follow" />
+  <style>
+    :root {
+      --bg:           #f8f7f5;
+      --surface:      #ffffff;
+      --border:       #e4e2de;
+      --text-primary: #1a1917;
+      --text-secondary:#6b6760;
+      --text-muted:   #9e9b96;
+      --accent:       #f59e0b;
+      --radius-md:    12px;
+    }
+    [data-theme="dark"] {
+      --bg:           #141312;
+      --surface:      #1e1d1b;
+      --border:       #2e2c29;
+      --text-primary: #f5f4f2;
+      --text-secondary:#b5b1aa;
+      --text-muted:   #7a7771;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 40px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+    .back-btn:hover { color: var(--accent); }
+    h1 { font-size: 28px; margin-bottom: 8px; letter-spacing: -0.5px; }
+    .meta-info { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    h2 { font-size: 18px; font-weight: 600; margin: 24px 0 12px 0; }
+    p { font-size: 15px; color: var(--text-secondary); margin-bottom: 16px; }
+    ul { margin-left: 24px; margin-bottom: 16px; color: var(--text-secondary); font-size: 15px; }
+    li { margin-bottom: 8px; }
+    @media (max-width: 600px) {
+      body { padding: 20px 12px; }
+      .container { padding: 24px 16px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-btn">← Back to IconCopy</a>
+    <h1>Terms of Service</h1>
+    <div class="meta-info">Last Updated: June 12, 2026</div>
+
+    <p>Welcome to <strong>IconCopy</strong>! These terms and conditions outline the rules and regulations for the use of IconCopy's Web Utility Platform.</p>
+    <p>By accessing this website, we assume you accept these terms and conditions. Do not continue to use IconCopy if you do not agree to take all of the terms and conditions stated on this page.</p>
+
+    <h2>1. Intellectual Property & Use License</h2>
+    <p>Unless otherwise stated, IconCopy and/or its licensors own the intellectual property rights for all material, code design, and layout architectures on IconCopy. All intellectual property rights are reserved. You may access this from IconCopy for your own personal or commercial use subjected to restrictions set in these terms and conditions.</p>
+    <p>You must not:</p>
+    <ul>
+      <li>Republish core source assets or mirror our dynamic interface layout without credit.</li>
+      <li>Sell, rent, or sub-license standalone material from IconCopy.</li>
+      <li>Use our web assets to inject automated scrapping loops that cause performance degradation on our open-source endpoints.</li>
+    </ul>
+
+    <h2>2. User Content & Interaction</h2>
+    <p>Our platform allows users to browse, search, and copy specific graphical assets (emojis/icons) instantly to their system clipboards. This tool is provided as a free utility. No user account setup or configuration logs are maintained on our central data nodes.</p>
+
+    <h2>3. Disclaimer of Warranties</h2>
+    <p>This website is provided "as is," with all faults, and IconCopy expresses no representations or warranties, of any kind related to this website or the materials contained on this website. Emojis and unicode assets are rendered based on your local operating system updates and browser compliance frameworks.</p>
+
+    <h2>4. Limitation of Liability</h2>
+    <p>In no event shall IconCopy, nor any of its contributors or developers, be held liable for anything arising out of or in any way connected with your use of this website whether such liability is under contract. IconCopy shall not be held liable for any indirect, consequential, or special liability arising out of or in any way related to your use of this web application.</p>
+
+    <h2>5. Variation of Terms</h2>
+    <p>IconCopy is permitted to revise these terms at any time as it sees fit, and by using this website you are expected to review these terms on a regular basis to ensure you understand all conditions governing the use of this platform.</p>
+  </div>
+
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+</body>
+</html>

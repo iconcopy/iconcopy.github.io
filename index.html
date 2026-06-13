@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IconCopy — Click. Copy. Paste.</title>
+  <meta name="description" content="The cleanest emoji copy tool on the web. Search, click, and copy any emoji instantly." />
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+       ============================================================ */
+    :root {
+      --bg:           #f8f7f5;
+      --surface:      #ffffff;
+      --surface-alt:  #f2f1ef;
+      --border:       #e4e2de;
+      --border-hover: #c9c6c0;
+      --text-primary: #1a1917;
+      --text-secondary:#6b6760;
+      --text-muted:   #9e9b96;
+      --accent:       #f59e0b;
+      --accent-light: #fef3c7;
+      --accent-deep:  #d97706;
+      --glow:         rgba(245,158,11,0.25);
+      --radius-sm:    8px;
+      --radius-md:    12px;
+      --radius-lg:    18px;
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:    0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg:    0 12px 32px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+      --font:         'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
+      --transition:   0.18s cubic-bezier(0.4,0,0.2,1);
+      --sidebar-w:    200px;
+      --header-h:     64px;
+    }
+    [data-theme="dark"] {
+      --bg:           #111110;
+      --surface:      #1c1b1a;
+      --surface-alt:  #242322;
+      --border:       #2e2d2b;
+      --border-hover: #444240;
+      --text-primary: #f5f4f1;
+      --text-secondary:#a09d98;
+      --text-muted:   #6b6760;
+      --accent:       #f59e0b;
+      --accent-light: #292217;
+      --accent-deep:  #fbbf24;
+      --glow:         rgba(245,158,11,0.20);
+      --shadow-sm:    0 1px 3px rgba(0,0,0,0.30), 0 1px 2px rgba(0,0,0,0.20);
+      --shadow-md:    0 4px 12px rgba(0,0,0,0.40), 0 2px 4px rgba(0,0,0,0.20);
+      --shadow-lg:    0 12px 32px rgba(0,0,0,0.50), 0 4px 8px rgba(0,0,0,0.30);
+    }
+
+    /* ============================================================
+       RESET & BASE
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+      overflow-x: hidden;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    /* ============================================================
+       SCROLLBAR
+       ============================================================ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+    .header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      z-index: 200;
+      box-shadow: var(--shadow-sm);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .logo-icon img{
+      width: 36px; height: 36px;
+      /* background: linear-gradient(135deg, var(--accent), var(--accent-deep)); */
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px var(--glow);
+    }
+    .logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
+    }
+    .logo-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Search */
+    .search-wrap {
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      height: 40px;
+      background: var(--surface-alt);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0 12px 0 38px;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+      background: var(--surface);
+    }
+    .search-clear {
+      position: absolute;
+      right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px; line-height: 1;
+      padding: 2px 4px; border-radius: 4px;
+      display: none;
+      transition: color var(--transition);
+    }
+    .search-clear:hover { color: var(--text-primary); }
+    .search-clear.visible { display: block; }
+
+    /* Header actions */
+    .header-actions {
+      display: flex; align-items: center; gap: 8px;
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      width: 38px; height: 38px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      color: var(--text-secondary);
+      transition: background var(--transition), border-color var(--transition), transform var(--transition), color var(--transition);
+    }
+    .icon-btn:hover {
+      background: var(--surface-alt);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+      transform: scale(1.05);
+    }
+    .icon-btn:active { transform: scale(0.97); }
+
+    /* ============================================================
+       LAYOUT
+       ============================================================ */
+    .layout {
+      display: flex;
+      padding-top: var(--header-h);
+      min-height: 100vh;
+    }
+
+    /* ============================================================
+       SIDEBAR
+       ============================================================ */
+    .sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: fixed;
+      top: var(--header-h);
+      bottom: 0;
+      left: 0;
+      overflow-y: auto;
+      padding: 16px 12px;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+      z-index: 100;
+    }
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 8px 8px;
+    }
+    .sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: background var(--transition), color var(--transition);
+      border: none; background: none; text-align: left; width: 100%;
+    }
+    .nav-item:hover { background: var(--surface-alt); color: var(--text-primary); }
+    .nav-item.active {
+      background: var(--accent-light);
+      color: var(--accent-deep);
+    }
+    .nav-item-icon { font-size: 16px; flex-shrink: 0; }
+    .nav-item-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Sidebar toggle for mobile */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      bottom: 20px; left: 20px;
+      z-index: 300;
+      width: 44px; height: 44px;
+      background: var(--accent);
+      color: #fff;
+      border: none; border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      align-items: center; justify-content: center;
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .sidebar-toggle:hover { transform: scale(1.08); box-shadow: var(--shadow-lg); }
+
+    /* ============================================================
+       MAIN CONTENT
+       ============================================================ */
+    .main {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      padding: 28px 28px 60px;
+      min-width: 0;
+    }
+
+    /* ============================================================
+       RECENTLY USED
+       ============================================================ */
+    .recently-used {
+      margin-bottom: 36px;
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+    .section-badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--accent-light);
+      color: var(--accent-deep);
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .recently-empty {
+      background: var(--surface-alt);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .recently-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+      gap: 8px;
+    }
+
+    /* ============================================================
+       EMOJI CATEGORY SECTION
+       ============================================================ */
+    .emoji-section {
+      margin-bottom: 40px;
+      scroll-margin-top: calc(var(--header-h) + 16px);
+    }
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      gap: 8px;
+    }
+
+    /* ============================================================
+       EMOJI CARD
+       ============================================================ */
+    .emoji-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px 4px 8px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      user-select: none;
+      transition:
+        transform var(--transition),
+        border-color var(--transition),
+        background var(--transition),
+        box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .emoji-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity var(--transition);
+      border-radius: inherit;
+    }
+    .emoji-card:hover {
+      transform: scale(1.08) translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px var(--glow), var(--shadow-md);
+      z-index: 2;
+    }
+    .emoji-card:hover::after { opacity: 0.06; }
+    .emoji-card:active { transform: scale(0.97); }
+    .emoji-card.copied {
+      border-color: #22c55e;
+      box-shadow: 0 4px 16px rgba(34,197,94,0.25);
+      animation: pop 0.3s ease;
+    }
+    @keyframes pop {
+      0% { transform: scale(1.0); }
+      50% { transform: scale(1.15); }
+      100% { transform: scale(1.0); }
+    }
+    .emoji-char {
+      font-size: 28px;
+      line-height: 1;
+      position: relative; z-index: 1;
+    }
+    .emoji-name {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.2;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      position: relative; z-index: 1;
+    }
+
+    /* Recently used cards — slightly larger emoji, no name */
+    .recently-grid .emoji-card { padding: 10px 6px; }
+    .recently-grid .emoji-char { font-size: 28px; }
+    .recently-grid .emoji-name { display: none; }
+
+    /* ============================================================
+       SEARCH RESULTS
+       ============================================================ */
+    #search-results-section {
+      display: none;
+    }
+    #search-results-section.visible {
+      display: block;
+    }
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .no-results-emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+    .no-results-title { font-size: 16px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
+    .no-results-sub { font-size: 14px; }
+
+    /* ============================================================
+       TOAST
+       ============================================================ */
+    #toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--text-primary);
+      color: var(--bg);
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      pointer-events: none;
+      animation: toast-in 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    }
+    .toast.out {
+      animation: toast-out 0.22s ease forwards;
+    }
+    .toast-emoji { font-size: 18px; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(16px) scale(0.9); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(8px) scale(0.93); }
+    }
+
+    /* ============================================================
+       SEARCH HIGHLIGHT
+       ============================================================ */
+    mark {
+      background: var(--accent-light);
+      color: var(--accent-deep);
+      border-radius: 2px;
+      padding: 0 1px;
+    }
+
+    /* ============================================================
+       FOOTER
+       ============================================================ */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ============================================================
+       STAT PILL
+       ============================================================ */
+    .stat-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .stat-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 12px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 99px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .stat-pill strong { color: var(--text-primary); }
+
+    /* ============================================================
+       MOBILE SIDEBAR OVERLAY
+       ============================================================ */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 220px; }
+      .sidebar {
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-lg);
+      }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 20px 16px 80px; }
+      .sidebar-toggle { display: flex; }
+      .logo-sub { display: none; }
+      .search-wrap { max-width: none; }
+      .emoji-grid { grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); }
+    }
+    @media (max-width: 480px) {
+      .header { padding: 0 14px; gap: 10px; }
+      .logo-text { font-size: 15px; }
+      .emoji-grid { grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+      .emoji-char { font-size: 24px; }
+      #toast-container { bottom: 16px; right: 16px; left: 16px; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
+
+
+/* ============================================================
+   PROFESSIONAL FOOTER (MUTED GRID STYLE)
+   ============================================================ */
+.site-footer {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 40px 24px 24px;
+  margin-top: auto; /* Push to bottom if content is less */
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 32px;
+}
+
+.footer-brand {
+  max-width: 320px;
+}
+
+.footer-brand .brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.footer-brand .brand-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.footer-links-group {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.footer-col h4 {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.footer-col a {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.footer-col a:hover {
+  color: var(--accent);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.footer-copyright strong {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.footer-meta-links {
+  display: flex;
+  gap: 16px;
+}
+
+.footer-meta-links a {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.footer-meta-links a:hover {
+  color: var(--text-primary);
+}
+
+/* Responsive adjustment for main layout footer */
+@media (max-width: 768px) {
+  .footer-top {
+    flex-direction: column;
+    gap: 24px;
+  }
+  .footer-links-group {
+    gap: 32px;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+  }
+}
+
+
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="header">
+  <a class="logo" href="#" aria-label="IconCopy home">
+    <div class="logo-icon"><img src="images/IconCopyLogo.png" alt=""></div>
+    <div>
+      <div class="logo-text">IconCopy</div>
+      <div class="logo-sub">Click · Copy · Paste</div>
+    </div>
+  </a>
+
+  <div class="search-wrap" role="search">
+    <span class="search-icon" aria-hidden="true">🔍</span>
+    <input
+      type="search"
+      class="search-input"
+      id="search-input"
+      placeholder="Search 900+ emojis by name or keyword…"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label="Search emojis"
+    />
+    <button class="search-clear" id="search-clear" aria-label="Clear search">×</button>
+  </div>
+
+  <div class="header-actions">
+    <button class="icon-btn" id="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+      <span id="theme-icon">🌙</span>
+    </button>
+  </div>
+</header>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar" aria-label="Category navigation">
+    <div class="sidebar-label">Categories</div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+
+    <!-- Stat row -->
+    <div class="stat-row" id="stat-row">
+      <div class="stat-pill">🎯 <strong id="total-count">0</strong>&nbsp;emojis ready</div>
+      <div class="stat-pill">📂 <strong id="cat-count">0</strong>&nbsp;categories</div>
+      <div class="stat-pill" id="copied-stat" style="display:none;">🔥 <strong id="copied-count-stat">0</strong>&nbsp;copied today</div>
+    </div>
+
+    <!-- Recently used -->
+    <section class="recently-used" id="recently-section">
+      <div class="section-header">
+        <span class="section-title">Recently Used</span>
+        <span class="section-badge" id="recently-badge">0</span>
+      </div>
+      <div id="recently-container">
+        <div class="recently-empty" id="recently-empty">
+          Click any emoji to copy it — your recent picks will appear here ✨
+        </div>
+        <div class="recently-grid" id="recently-grid" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- Search results (shown when searching) -->
+    <section id="search-results-section">
+      <div class="section-header">
+        <span class="section-title">Search Results</span>
+        <span class="section-badge" id="results-badge">0</span>
+      </div>
+      <div id="search-results-grid" class="emoji-grid"></div>
+    </section>
+
+    <!-- Category sections (shown when not searching) -->
+    <div id="categories-container"></div>
+
+    <section class="content-guide-section" style="max-width: 1200px; margin: 60px auto; padding: 0 20px; font-family: sans-serif;">
+  <h2 style="font-size: 24px; margin-bottom: 20px;">Frequently Asked Questions & Guide</h2>
+  
+  <div style="margin-bottom: 20px;">
+    <h3 style="font-size: 18px; margin-bottom: 8px;">How do I use IconCopy to copy emojis?</h3>
+    <p style="color: var(--text-secondary); line-height: 1.6;">Using IconCopy is extremely simple. Just browse through our curated categories or use the instant live search bar to find the exact emoji or icon you need. Click on any emoji card, and it will instantly be saved to your system clipboard. You can then paste it anywhere using Ctrl+V or Cmd+V.</p>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <h3 style="font-size: 18px; margin-bottom: 8px;">Are these emojis compatible with iOS, Android, and Windows?</h3>
+    <p style="color: var(--text-secondary); line-height: 1.6;">Yes, absolutely! IconCopy utilizes standard Unicode characters. This ensures that any symbol, icon, or emoji you copy from our platform will render perfectly across all modern operating systems, web browsers, and social media platforms like Instagram, Twitter, and LinkedIn.</p>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <h3 style="font-size: 18px; margin-bottom: 8px;">Does IconCopy track my clipboard data?</h3>
+    <p style="color: var(--text-secondary); line-height: 1.6;">Your privacy is our utmost priority. IconCopy is a pure client-side utility tool. We only track global aggregate counts to display total platform interactions via safe serverless streams. Your personal selections, recently copied history, and clipboard contents are never sent to any server; they stay 100% sandboxed in your browser storage.</p>
+  </div>
+</section>
+<footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="brand-title">IconCopy</div>
+          <div class="brand-desc">The cleanest and fastest emoji & icon utility tool on the web. Search, click, and copy any emoji instantly to your clipboard.</div>
+        </div>
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="#">Emojis</a>
+            <a href="#">Categories</a>
+            <a href="#">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Developer</h4>
+            <a href="https://github.com" target="_blank" rel="noopener">GitHub</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact Us</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          &copy; 2026 <strong>IconCopy</strong>. Built with ⚡ for creators.
+        </div>
+        <div class="footer-meta-links">
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="cookies.html">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+  </main>
+</div>
+
+<!-- Mobile sidebar toggle -->
+<button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+
+<!-- Toast container -->
+<div id="toast-container" role="status" aria-live="polite"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+/* ============================================================
+   EMOJI DATASET — 9 categories, ~100 emojis each
+   Structure: { char, name, keywords[] }
+   ============================================================ */
+const EMOJI_DATA = [
+  {
+    id: 'smileys',
+    label: 'Smileys & Emotion',
+    icon: '😀',
+    emojis: [
+      { char:'😀', name:'Grinning Face', kw:['happy','smile','grin','laugh','joy'] },
+      { char:'😃', name:'Grinning Big Eyes', kw:['happy','smile','excited','joy'] },
+      { char:'😄', name:'Grinning Squinting', kw:['happy','laugh','haha','joy','grin'] },
+      { char:'😁', name:'Beaming Smile', kw:['happy','grin','smile','teeth'] },
+      { char:'😆', name:'Squinting Laughing', kw:['laugh','lol','funny','haha','xd'] },
+      { char:'😅', name:'Sweat Smile', kw:['nervous','relief','phew','awkward','sweat'] },
+      { char:'🤣', name:'Rolling Laughing', kw:['rofl','funny','lmao','laugh','tears','haha'] },
+      { char:'😂', name:'Tears of Joy', kw:['lol','funny','laugh','crying','haha','tears'] },
+      { char:'🙂', name:'Slightly Smiling', kw:['smile','okay','fine','pleasant'] },
+      { char:'🙃', name:'Upside Down', kw:['silly','sarcasm','irony','weird','flip'] },
+      { char:'😉', name:'Winking Face', kw:['wink','flirt','hint','playful','joke'] },
+      { char:'😊', name:'Smiling Blush', kw:['happy','cute','blush','sweet','kind'] },
+      { char:'😇', name:'Smiling Halo', kw:['angel','innocent','good','holy','halo'] },
+      { char:'🥰', name:'Smiling Hearts', kw:['love','adore','hearts','affection','cute'] },
+      { char:'😍', name:'Heart Eyes', kw:['love','crush','wow','beautiful','amazing'] },
+      { char:'🤩', name:'Star Struck', kw:['starstruck','wow','amazing','excited','celebrity'] },
+      { char:'😘', name:'Face Blowing Kiss', kw:['kiss','love','mwah','affection','flirt'] },
+      { char:'😗', name:'Kissing Face', kw:['kiss','whistle','pucker','lips'] },
+      { char:'☺️', name:'Smiling Relaxed', kw:['happy','content','peaceful','sweet'] },
+      { char:'😚', name:'Kissing Closed Eyes', kw:['kiss','love','sweet','eyes closed'] },
+      { char:'😙', name:'Kissing Smiling', kw:['kiss','smile','sweet'] },
+      { char:'🥲', name:'Smiling Tear', kw:['sad','happy','bittersweet','moved','touched'] },
+      { char:'😋', name:'Face Savoring Food', kw:['yummy','delicious','food','tasty','hungry'] },
+      { char:'😛', name:'Face Tongue', kw:['tongue','silly','playful','tease'] },
+      { char:'😜', name:'Winking Tongue', kw:['wink','tongue','crazy','silly','wild'] },
+      { char:'🤪', name:'Zany Face', kw:['crazy','wild','goofy','silly','party'] },
+      { char:'😝', name:'Squinting Tongue', kw:['tongue','teasing','gross','yuck'] },
+      { char:'🤑', name:'Money Mouth', kw:['money','rich','dollar','cash','greedy'] },
+      { char:'🤗', name:'Hugging Face', kw:['hug','love','warm','embrace','support'] },
+      { char:'🤭', name:'Hand Over Mouth', kw:['oops','shh','giggle','secret','surprise'] },
+      { char:'🤫', name:'Shushing Face', kw:['quiet','shh','secret','silence','ssh'] },
+      { char:'🤔', name:'Thinking Face', kw:['think','hmm','wondering','ponder','question'] },
+      { char:'🤐', name:'Zipper Mouth', kw:['silent','secret','quiet','zipped','shhh'] },
+      { char:'🤨', name:'Raised Eyebrow', kw:['suspicious','skeptical','doubt','really','hmm'] },
+      { char:'😐', name:'Neutral Face', kw:['neutral','meh','okay','blank','deadpan'] },
+      { char:'😑', name:'Expressionless', kw:['expressionless','blank','meh','unimpressed'] },
+      { char:'😶', name:'Face Without Mouth', kw:['silent','quiet','speechless','mute'] },
+      { char:'😶‍🌫️', name:'Face in Clouds', kw:['confused','dreamy','fog','spaced out'] },
+      { char:'😏', name:'Smirking Face', kw:['smirk','sly','know','flirt','side eye'] },
+      { char:'😒', name:'Unamused Face', kw:['bored','meh','whatever','unimpressed','side eye'] },
+      { char:'🙄', name:'Eye Roll', kw:['eye roll','annoyed','boring','whatever','ugh'] },
+      { char:'😬', name:'Grimacing Face', kw:['grimace','awkward','nervous','yikes','oops'] },
+      { char:'😮‍💨', name:'Face Exhale', kw:['sigh','relief','phew','exhale','tired'] },
+      { char:'🤥', name:'Lying Face', kw:['lie','pinocchio','dishonest','fibbing'] },
+      { char:'😌', name:'Relieved Face', kw:['relief','peaceful','calm','content','serene'] },
+      { char:'😔', name:'Pensive Face', kw:['sad','thoughtful','down','unhappy','reflective'] },
+      { char:'😪', name:'Sleepy Face', kw:['sleepy','tired','drowsy','yawn','drool'] },
+      { char:'🤤', name:'Drooling Face', kw:['drool','hungry','delicious','yummy','want'] },
+      { char:'😴', name:'Sleeping Face', kw:['sleep','zzz','tired','bed','snore'] },
+      { char:'😷', name:'Face with Mask', kw:['sick','mask','covid','ill','cold','health'] },
+      { char:'🤒', name:'Face with Thermometer', kw:['sick','fever','ill','temperature','cold'] },
+      { char:'🤕', name:'Face with Bandage', kw:['hurt','injured','ouch','bandage','boo boo'] },
+      { char:'🤢', name:'Nauseated Face', kw:['gross','sick','eww','nausea','green'] },
+      { char:'🤮', name:'Vomiting Face', kw:['sick','eww','gross','throw up','puking'] },
+      { char:'🤧', name:'Sneezing Face', kw:['sneeze','sick','cold','achoo','allergies'] },
+      { char:'🥵', name:'Hot Face', kw:['hot','fire','sweating','burning','summer'] },
+      { char:'🥶', name:'Cold Face', kw:['cold','freezing','winter','ice','blue'] },
+      { char:'🥴', name:'Woozy Face', kw:['drunk','dizzy','tipsy','woozy','unwell'] },
+      { char:'😵', name:'Dizzy Face', kw:['dizzy','stunned','woozy','spinning','confused'] },
+      { char:'😵‍💫', name:'Face Spiral', kw:['spiral','dizzy','hypnotized','confused','swirly'] },
+      { char:'🤯', name:'Exploding Head', kw:['mindblown','explode','wow','shocked','crazy'] },
+      { char:'🥳', name:'Partying Face', kw:['party','celebrate','birthday','yay','woohoo'] },
+      { char:'🥸', name:'Disguised Face', kw:['disguise','undercover','glasses','incognito'] },
+      { char:'😎', name:'Sunglasses Cool', kw:['cool','sunglasses','awesome','chill','swag'] },
+      { char:'🤓', name:'Nerd Face', kw:['nerd','geek','glasses','smart','study'] },
+      { char:'🧐', name:'Face Monocle', kw:['inspect','curious','classy','monocle','fancy'] },
+      { char:'😕', name:'Confused Face', kw:['confused','uncertain','puzzled','hm','what'] },
+      { char:'😟', name:'Worried Face', kw:['worried','anxious','concerned','nervous','sad'] },
+      { char:'🙁', name:'Slightly Frowning', kw:['sad','unhappy','down','frown'] },
+      { char:'☹️', name:'Frowning Face', kw:['sad','unhappy','frown','down','upset'] },
+      { char:'😮', name:'Face Open Mouth', kw:['wow','surprised','shocked','astonished','oh'] },
+      { char:'😯', name:'Hushed Face', kw:['surprised','quiet','shh','hushed'] },
+      { char:'😲', name:'Astonished Face', kw:['shocked','wow','whoa','amazed','surprised'] },
+      { char:'😳', name:'Flushed Face', kw:['embarrassed','blush','shocked','wow','red'] },
+      { char:'🥺', name:'Pleading Face', kw:['please','puppy eyes','beg','cute','uwu'] },
+      { char:'😦', name:'Frowning Open Mouth', kw:['sad','shocked','what','worried','ugh'] },
+      { char:'😧', name:'Anguished Face', kw:['anguish','worried','distressed','help'] },
+      { char:'😨', name:'Fearful Face', kw:['scared','fear','worried','anxious','help'] },
+      { char:'😰', name:'Anxious Sweat', kw:['nervous','scared','worried','cold sweat','anxious'] },
+      { char:'😥', name:'Sad Relieved', kw:['sad','relief','phew','disappointed'] },
+      { char:'😢', name:'Crying Face', kw:['cry','sad','tears','upset','weeping'] },
+      { char:'😭', name:'Loudly Crying', kw:['sobbing','cry','sad','bawling','tears'] },
+      { char:'😱', name:'Screaming Fear', kw:['scream','scared','horrified','no','shocked'] },
+      { char:'😖', name:'Confounded Face', kw:['frustrated','confused','ugh','stuck','annoyed'] },
+      { char:'😣', name:'Persevering Face', kw:['struggle','trying','hard','frustrated','enduring'] },
+      { char:'😞', name:'Disappointed Face', kw:['disappointed','sad','letdown','unhappy'] },
+      { char:'😓', name:'Downcast Sweat', kw:['hard','stressed','tough','sad','sweat'] },
+      { char:'😩', name:'Weary Face', kw:['tired','done','weary','exhausted','ugh'] },
+      { char:'😫', name:'Tired Face', kw:['exhausted','done','overtime','sleepy','burnout'] },
+      { char:'🥱', name:'Yawning Face', kw:['yawn','bored','tired','sleepy','boring'] },
+      { char:'😤', name:'Steam Nose', kw:['angry','frustrated','ugh','huffing','determined'] },
+      { char:'😡', name:'Pouting Face', kw:['angry','mad','rage','pout','fury'] },
+      { char:'😠', name:'Angry Face', kw:['angry','mad','annoyed','furious','upset'] },
+      { char:'🤬', name:'Cursing Face', kw:['swearing','angry','furious','expletive','mad'] },
+      { char:'😈', name:'Smiling Devil', kw:['devil','evil','mischief','villain','naughty'] },
+      { char:'👿', name:'Angry Devil', kw:['evil','devil','angry','dark','demon'] },
+      { char:'💀', name:'Skull', kw:['skull','dead','danger','death','bones','scary'] },
+      { char:'☠️', name:'Skull Crossbones', kw:['danger','pirate','death','poison','scary'] },
+      { char:'💩', name:'Pile of Poo', kw:['poop','shit','crap','funny','brown'] },
+      { char:'🤡', name:'Clown Face', kw:['clown','circus','funny','scary','joke'] },
+      { char:'👹', name:'Ogre', kw:['monster','demon','scary','mask','japanese'] },
+      { char:'👺', name:'Goblin', kw:['demon','red','oni','mask','japanese','scary'] },
+      { char:'👻', name:'Ghost', kw:['ghost','halloween','spooky','boo','scary','spirit'] },
+      { char:'👽', name:'Alien', kw:['alien','ufo','space','extraterrestrial','weird'] },
+      { char:'👾', name:'Alien Monster', kw:['game','alien','retro','arcade','monster','8bit'] },
+      { char:'🤖', name:'Robot', kw:['robot','bot','tech','ai','machine','android'] },
+      { char:'😺', name:'Grinning Cat', kw:['cat','happy','smile','kitty','meow'] },
+      { char:'😸', name:'Grinning Cat Joy', kw:['cat','laugh','happy','meow','haha'] },
+      { char:'😹', name:'Cat Tears Joy', kw:['cat','crying','laugh','funny','meow'] },
+      { char:'😻', name:'Cat Heart Eyes', kw:['cat','love','heart eyes','adore','meow'] },
+    ]
+  },
+  {
+    id: 'people',
+    label: 'People & Body',
+    icon: '👋',
+    emojis: [
+      { char:'👋', name:'Waving Hand', kw:['wave','hello','hi','bye','greeting'] },
+      { char:'🤚', name:'Raised Back Hand', kw:['stop','hand','high five','back'] },
+      { char:'🖐️', name:'Hand Fingers Splayed', kw:['stop','five','hand','open'] },
+      { char:'✋', name:'Raised Hand', kw:['stop','high five','hand','hello'] },
+      { char:'🖖', name:'Vulcan Salute', kw:['spock','star trek','live long','peace'] },
+      { char:'👌', name:'OK Hand', kw:['ok','perfect','okay','agree','fine'] },
+      { char:'🤌', name:'Pinched Fingers', kw:['italian','perfect','what','gesture','chef'] },
+      { char:'🤏', name:'Pinching Hand', kw:['small','little','pinch','size','tiny'] },
+      { char:'✌️', name:'Victory Hand', kw:['peace','victory','two','v sign','yes'] },
+      { char:'🤞', name:'Crossed Fingers', kw:['lucky','hope','wish','cross fingers','fortune'] },
+      { char:'🤟', name:'Love You Gesture', kw:['love','ily','rock','hand','sign'] },
+      { char:'🤘', name:'Sign of Horns', kw:['rock','metal','horns','devil','music'] },
+      { char:'🤙', name:'Call Me Hand', kw:['call','phone','shaka','hang loose','hawaii'] },
+      { char:'👈', name:'Backhand Left', kw:['point','left','direction','this way'] },
+      { char:'👉', name:'Backhand Right', kw:['point','right','direction','this way'] },
+      { char:'👆', name:'Backhand Up', kw:['point','up','above','look','number one'] },
+      { char:'🖕', name:'Middle Finger', kw:['rude','offensive','finger','flip off','profanity'] },
+      { char:'👇', name:'Backhand Down', kw:['point','down','below','look','here'] },
+      { char:'☝️', name:'Index Up', kw:['point','idea','one','first','attention'] },
+      { char:'👍', name:'Thumbs Up', kw:['like','yes','good','approve','agree','thumbsup'] },
+      { char:'👎', name:'Thumbs Down', kw:['dislike','no','bad','disapprove','disagree'] },
+      { char:'✊', name:'Raised Fist', kw:['fist','power','strong','solidarity','punch'] },
+      { char:'👊', name:'Oncoming Fist', kw:['punch','fist','fight','bump','strength'] },
+      { char:'🤛', name:'Left Fist', kw:['fist','left','bump','power'] },
+      { char:'🤜', name:'Right Fist', kw:['fist','right','bump','power'] },
+      { char:'👏', name:'Clapping Hands', kw:['clap','applause','well done','bravo','celebrate'] },
+      { char:'🙌', name:'Raising Hands', kw:['celebrate','praise','yay','hooray','worship'] },
+      { char:'👐', name:'Open Hands', kw:['open','hug','jazz hands','free','welcome'] },
+      { char:'🤲', name:'Palms Up Together', kw:['cup hands','pray','offer','hold','receive'] },
+      { char:'🤝', name:'Handshake', kw:['deal','agreement','partnership','shake','business'] },
+      { char:'🙏', name:'Folded Hands', kw:['pray','thanks','please','namaste','grateful','high five'] },
+      { char:'✍️', name:'Writing Hand', kw:['write','pen','sign','note','author'] },
+      { char:'💅', name:'Nail Polish', kw:['nails','manicure','beauty','glamour','sassy'] },
+      { char:'🤳', name:'Selfie', kw:['selfie','photo','camera','phone','picture'] },
+      { char:'💪', name:'Flexed Bicep', kw:['strong','muscle','gym','strength','power','flex'] },
+      { char:'🦾', name:'Mechanical Arm', kw:['robot','bionic','prosthetic','cyborg','strong'] },
+      { char:'🦿', name:'Mechanical Leg', kw:['robot','prosthetic','bionic','cyborg'] },
+      { char:'🦵', name:'Leg', kw:['kick','leg','limb','body'] },
+      { char:'🦶', name:'Foot', kw:['foot','kick','feet','barefoot'] },
+      { char:'👂', name:'Ear', kw:['hear','listen','ear','sound'] },
+      { char:'🦻', name:'Ear Hearing Aid', kw:['deaf','hearing','aid','disability','ear'] },
+      { char:'👃', name:'Nose', kw:['smell','sniff','nose','face'] },
+      { char:'🫀', name:'Anatomical Heart', kw:['heart','organ','love','health','beat'] },
+      { char:'🫁', name:'Lungs', kw:['lung','breathe','respiration','organ','health'] },
+      { char:'🧠', name:'Brain', kw:['brain','smart','think','mind','intelligence','iq'] },
+      { char:'🦷', name:'Tooth', kw:['tooth','dentist','teeth','dental'] },
+      { char:'🦴', name:'Bone', kw:['bone','skeleton','dog','anatomy'] },
+      { char:'👀', name:'Eyes', kw:['eyes','look','see','watch','stare','lurking'] },
+      { char:'👁️', name:'Eye', kw:['eye','watch','see','look','vision'] },
+      { char:'👅', name:'Tongue', kw:['tongue','taste','lick','yummy'] },
+      { char:'👄', name:'Mouth', kw:['lips','mouth','kiss','speak','lipstick'] },
+      { char:'🫦', name:'Biting Lip', kw:['bite','lip','flirt','nervous','seductive'] },
+      { char:'👶', name:'Baby', kw:['baby','infant','child','newborn','cute'] },
+      { char:'🧒', name:'Child', kw:['kid','child','young','boy','girl'] },
+      { char:'👦', name:'Boy', kw:['boy','kid','child','male','young'] },
+      { char:'👧', name:'Girl', kw:['girl','kid','child','female','young'] },
+      { char:'🧑', name:'Person', kw:['person','human','adult','neutral'] },
+      { char:'👱', name:'Blond Person', kw:['blonde','person','hair','adult'] },
+      { char:'👨', name:'Man', kw:['man','male','person','dad','guy'] },
+      { char:'🧔', name:'Bearded Person', kw:['beard','man','person','facial hair'] },
+      { char:'👩', name:'Woman', kw:['woman','female','person','lady','girl'] },
+      { char:'🧓', name:'Older Person', kw:['elderly','old','senior','grandparent'] },
+      { char:'👴', name:'Old Man', kw:['grandpa','elderly','grandfather','old','senior'] },
+      { char:'👵', name:'Old Woman', kw:['grandma','elderly','grandmother','old','senior'] },
+      { char:'🙍', name:'Frowning Person', kw:['sad','unhappy','frown','down'] },
+      { char:'🙎', name:'Pouting Person', kw:['angry','pout','upset','mad'] },
+      { char:'🙅', name:'Gesturing No', kw:['no','stop','refuse','deny','x','cross'] },
+      { char:'🙆', name:'Gesturing OK', kw:['ok','good','alright','agree','yes'] },
+      { char:'💁', name:'Tipping Hand', kw:['info','sassy','help','service','duh','flipping hair'] },
+      { char:'🙋', name:'Hand Raised', kw:['raise hand','question','volunteer','yes','hello'] },
+      { char:'🧏', name:'Deaf Person', kw:['deaf','hearing','disability','sign language'] },
+      { char:'🙇', name:'Person Bowing', kw:['bow','sorry','thank you','respect','apologize'] },
+      { char:'🤦', name:'Face Palm', kw:['facepalm','duh','ugh','seriously','smh'] },
+      { char:'🤷', name:'Shrug', kw:['shrug','idk','dunno','who knows','whatever'] },
+      { char:'👮', name:'Police Officer', kw:['police','cop','officer','law','badge','security'] },
+      { char:'🕵️', name:'Detective', kw:['detective','spy','investigate','mystery','sherlock'] },
+      { char:'💂', name:'Guard', kw:['guard','royal','london','protect','security'] },
+      { char:'🥷', name:'Ninja', kw:['ninja','stealth','fighter','dark','cool','japan'] },
+      { char:'👷', name:'Construction Worker', kw:['construction','worker','hard hat','build','labor'] },
+      { char:'🤴', name:'Prince', kw:['prince','royalty','crown','king','male'] },
+      { char:'👸', name:'Princess', kw:['princess','crown','royalty','queen','fairy tale'] },
+      { char:'👳', name:'Person Turban', kw:['turban','indian','sikh','hijab','headwear'] },
+      { char:'👲', name:'Person Skullcap', kw:['chinese','hat','asian','cap'] },
+      { char:'🧕', name:'Woman Headscarf', kw:['hijab','headscarf','muslim','modesty'] },
+      { char:'🤵', name:'Person in Tuxedo', kw:['tuxedo','wedding','suit','groom','formal'] },
+      { char:'👰', name:'Person Veil', kw:['bride','wedding','veil','marriage'] },
+      { char:'🤰', name:'Pregnant Woman', kw:['pregnant','baby','expecting','mother','maternity'] },
+      { char:'🤱', name:'Breast Feeding', kw:['breastfeeding','nursing','mother','baby','feed'] },
+      { char:'👼', name:'Baby Angel', kw:['angel','baby','cherub','cute','holy'] },
+      { char:'🎅', name:'Santa Claus', kw:['santa','christmas','xmas','holiday','gifts'] },
+      { char:'🤶', name:'Mrs Claus', kw:['mrs claus','christmas','xmas','holiday','santa'] },
+      { char:'🧙', name:'Mage', kw:['wizard','witch','magic','spell','harry potter'] },
+      { char:'🧚', name:'Fairy', kw:['fairy','magic','wings','fantasy','tinkerbell'] },
+      { char:'🧛', name:'Vampire', kw:['vampire','dracula','blood','halloween','spooky'] },
+      { char:'🧜', name:'Merperson', kw:['mermaid','sea','ocean','fantasy','fish','ariel'] },
+      { char:'🧝', name:'Elf', kw:['elf','fantasy','magic','tolkien','lotr','christmas'] },
+      { char:'🧞', name:'Genie', kw:['genie','wish','lamp','magic','aladdin'] },
+      { char:'🧟', name:'Zombie', kw:['zombie','undead','halloween','walking dead','horror'] },
+      { char:'💆', name:'Face Massage', kw:['massage','relax','spa','health','head'] },
+      { char:'💇', name:'Haircut', kw:['haircut','barber','salon','beauty','hair'] },
+      { char:'🚶', name:'Walking', kw:['walk','stroll','pedestrian','moving'] },
+      { char:'🏃', name:'Running', kw:['run','sprint','jog','fast','exercise','fitness'] },
+      { char:'💃', name:'Woman Dancing', kw:['dance','party','salsa','music','fun'] },
+      { char:'🕺', name:'Man Dancing', kw:['dance','party','disco','music','fun'] },
+    ]
+  },
+  {
+    id: 'animals',
+    label: 'Animals & Nature',
+    icon: '🐶',
+    emojis: [
+      { char:'🐶', name:'Dog Face', kw:['dog','pet','puppy','cute','woof','animal'] },
+      { char:'🐱', name:'Cat Face', kw:['cat','pet','kitten','cute','meow','animal'] },
+      { char:'🐭', name:'Mouse Face', kw:['mouse','rodent','animal','cute','squeak'] },
+      { char:'🐹', name:'Hamster', kw:['hamster','pet','cute','rodent','cheeks'] },
+      { char:'🐰', name:'Rabbit Face', kw:['rabbit','bunny','cute','easter','hop'] },
+      { char:'🦊', name:'Fox', kw:['fox','clever','sly','orange','wild'] },
+      { char:'🐻', name:'Bear', kw:['bear','strong','brown','teddy','wild'] },
+      { char:'🐼', name:'Panda', kw:['panda','china','bamboo','cute','endangered'] },
+      { char:'🐨', name:'Koala', kw:['koala','australia','cute','eucalyptus','bear'] },
+      { char:'🐯', name:'Tiger Face', kw:['tiger','wild','stripes','fierce','cat'] },
+      { char:'🦁', name:'Lion', kw:['lion','king','safari','wild','roar','proud'] },
+      { char:'🐮', name:'Cow Face', kw:['cow','moo','farm','milk','animal'] },
+      { char:'🐷', name:'Pig Face', kw:['pig','oink','farm','pink','cute'] },
+      { char:'🐸', name:'Frog', kw:['frog','green','jump','ribbit','kermit'] },
+      { char:'🐵', name:'Monkey Face', kw:['monkey','primate','banana','animal','cute'] },
+      { char:'🙈', name:'See No Evil', kw:['see no evil','monkey','hide','blind','omg'] },
+      { char:'🙉', name:'Hear No Evil', kw:['hear no evil','monkey','deaf','omg','shocked'] },
+      { char:'🙊', name:'Speak No Evil', kw:['speak no evil','monkey','quiet','shhh','secret'] },
+      { char:'🐔', name:'Chicken', kw:['chicken','hen','farm','cluck','poultry'] },
+      { char:'🐧', name:'Penguin', kw:['penguin','cold','arctic','cute','tuxedo','linux'] },
+      { char:'🐦', name:'Bird', kw:['bird','tweet','chirp','wings','fly'] },
+      { char:'🐤', name:'Baby Chick', kw:['chick','baby','bird','yellow','cute','easter'] },
+      { char:'🦆', name:'Duck', kw:['duck','quack','water','bird','cute'] },
+      { char:'🦅', name:'Eagle', kw:['eagle','america','majestic','bird','freedom','fly'] },
+      { char:'🦉', name:'Owl', kw:['owl','wise','night','hoot','bird','smart'] },
+      { char:'🦇', name:'Bat', kw:['bat','vampire','halloween','night','cave'] },
+      { char:'🐺', name:'Wolf', kw:['wolf','howl','wild','pack','moon','fierce'] },
+      { char:'🐗', name:'Boar', kw:['boar','pig','wild','tusks','animal'] },
+      { char:'🐴', name:'Horse Face', kw:['horse','pony','ride','wild','animal'] },
+      { char:'🦄', name:'Unicorn', kw:['unicorn','magic','rainbow','fantasy','horn','cute'] },
+      { char:'🐝', name:'Honeybee', kw:['bee','honey','sting','fly','yellow','nature'] },
+      { char:'🪱', name:'Worm', kw:['worm','garden','earth','gross','squirm'] },
+      { char:'🐛', name:'Bug', kw:['bug','caterpillar','insect','nature','worm'] },
+      { char:'🦋', name:'Butterfly', kw:['butterfly','beautiful','transform','wings','nature','flutter'] },
+      { char:'🐌', name:'Snail', kw:['snail','slow','shell','nature','garden'] },
+      { char:'🐞', name:'Ladybug', kw:['ladybug','red','spots','lucky','insect','cute'] },
+      { char:'🐜', name:'Ant', kw:['ant','colony','work','insect','small'] },
+      { char:'🦟', name:'Mosquito', kw:['mosquito','bite','insect','blood','pest','bug'] },
+      { char:'🦗', name:'Cricket', kw:['cricket','chirp','insect','night','grass'] },
+      { char:'🕷️', name:'Spider', kw:['spider','web','scary','halloween','eight legs'] },
+      { char:'🦂', name:'Scorpion', kw:['scorpion','sting','desert','dangerous','zodiac'] },
+      { char:'🐢', name:'Turtle', kw:['turtle','slow','sea','shell','wise','reptile'] },
+      { char:'🐍', name:'Snake', kw:['snake','sss','reptile','danger','venom','slither'] },
+      { char:'🦎', name:'Lizard', kw:['lizard','reptile','gecko','chameleon','tail'] },
+      { char:'🦕', name:'Sauropod', kw:['dinosaur','dino','brachiosaurus','prehistoric','jurassic'] },
+      { char:'🦖', name:'T-Rex', kw:['dinosaur','trex','dino','roar','prehistoric','extinct'] },
+      { char:'🐙', name:'Octopus', kw:['octopus','ocean','sea','tentacles','smart','squid'] },
+      { char:'🦑', name:'Squid', kw:['squid','ocean','sea','tentacles','ink'] },
+      { char:'🦐', name:'Shrimp', kw:['shrimp','seafood','ocean','small','prawn'] },
+      { char:'🦞', name:'Lobster', kw:['lobster','seafood','red','claws','ocean'] },
+      { char:'🦀', name:'Crab', kw:['crab','sideways','seafood','red','pinch','beach'] },
+      { char:'🐡', name:'Blowfish', kw:['blowfish','pufferfish','ocean','spike','fish'] },
+      { char:'🐠', name:'Tropical Fish', kw:['fish','tropical','colorful','ocean','nemo'] },
+      { char:'🐟', name:'Fish', kw:['fish','sea','ocean','swim','animal'] },
+      { char:'🐬', name:'Dolphin', kw:['dolphin','ocean','smart','swim','cute','jump'] },
+      { char:'🐳', name:'Whale Spouting', kw:['whale','ocean','big','spout','sea'] },
+      { char:'🐋', name:'Whale', kw:['whale','ocean','big','sea','mammal'] },
+      { char:'🦈', name:'Shark', kw:['shark','ocean','danger','bite','sea','dun dun'] },
+      { char:'🐊', name:'Crocodile', kw:['crocodile','alligator','reptile','snap','dangerous'] },
+      { char:'🦓', name:'Zebra', kw:['zebra','stripes','africa','safari','wild'] },
+      { char:'🦏', name:'Rhinoceros', kw:['rhino','horn','africa','big','animal'] },
+      { char:'🦛', name:'Hippopotamus', kw:['hippo','water','big','africa','yawn'] },
+      { char:'🐘', name:'Elephant', kw:['elephant','memory','big','trunk','africa','india'] },
+      { char:'🦒', name:'Giraffe', kw:['giraffe','tall','africa','neck','spots','safari'] },
+      { char:'🦬', name:'Bison', kw:['bison','buffalo','america','wild','brown'] },
+      { char:'🦃', name:'Turkey', kw:['turkey','thanksgiving','bird','gobble','farm'] },
+      { char:'🦩', name:'Flamingo', kw:['flamingo','pink','bird','tropical','one leg'] },
+      { char:'🦚', name:'Peacock', kw:['peacock','beautiful','feathers','colorful','bird'] },
+      { char:'🦜', name:'Parrot', kw:['parrot','talk','colorful','pirate','bird'] },
+      { char:'🦢', name:'Swan', kw:['swan','white','elegant','graceful','bird','lake'] },
+      { char:'🦤', name:'Dodo', kw:['dodo','extinct','bird','island','clumsy'] },
+      { char:'🪶', name:'Feather', kw:['feather','bird','light','write','quill','nature'] },
+      { char:'🐓', name:'Rooster', kw:['rooster','chicken','cock','morning','crow','farm'] },
+      { char:'🦔', name:'Hedgehog', kw:['hedgehog','spiky','cute','small','curl','sonic'] },
+      { char:'🦦', name:'Otter', kw:['otter','cute','water','swim','hold hands','river'] },
+      { char:'🦥', name:'Sloth', kw:['sloth','slow','hang','sleep','lazy','cute'] },
+      { char:'🦨', name:'Skunk', kw:['skunk','smell','stripe','stinky','black white'] },
+      { char:'🦡', name:'Badger', kw:['badger','stripe','honey badger','wild'] },
+      { char:'🦌', name:'Deer', kw:['deer','antler','bambi','forest','gentle','wild'] },
+      { char:'🐕', name:'Dog', kw:['dog','pet','puppy','woof','loyal','animal'] },
+      { char:'🐈', name:'Cat', kw:['cat','kitten','pet','meow','animal'] },
+      { char:'🐾', name:'Paw Prints', kw:['paw','tracks','pet','cat','dog','animal'] },
+      { char:'🌵', name:'Cactus', kw:['cactus','desert','plant','prickly','southwest'] },
+      { char:'🎄', name:'Christmas Tree', kw:['christmas','tree','xmas','holiday','pine'] },
+      { char:'🌲', name:'Evergreen Tree', kw:['tree','pine','forest','nature','green'] },
+      { char:'🌳', name:'Deciduous Tree', kw:['tree','forest','oak','nature','park'] },
+      { char:'🌴', name:'Palm Tree', kw:['palm','tropical','beach','coconut','vacation'] },
+      { char:'🪵', name:'Wood', kw:['wood','log','timber','chop','fire'] },
+      { char:'🌱', name:'Seedling', kw:['plant','seedling','grow','sprout','nature','green'] },
+      { char:'🌿', name:'Herb', kw:['herb','plant','green','nature','leaf','weed'] },
+      { char:'☘️', name:'Shamrock', kw:['irish','luck','clover','ireland','st patrick'] },
+      { char:'🍀', name:'Four Leaf Clover', kw:['lucky','clover','luck','good luck','four leaf'] },
+      { char:'🎋', name:'Tanabata Tree', kw:['bamboo','japanese','wish','festival'] },
+      { char:'🎍', name:'Pine Decoration', kw:['pine','japanese','new year','decoration'] },
+      { char:'🍃', name:'Leaf Fluttering', kw:['leaf','wind','nature','blow','green'] },
+      { char:'🍂', name:'Fallen Leaf', kw:['leaf','autumn','fall','brown','maple'] },
+      { char:'🍁', name:'Maple Leaf', kw:['maple','canada','autumn','fall','red','leaf'] },
+      { char:'🍄', name:'Mushroom', kw:['mushroom','mario','forest','fungi','toadstool'] },
+      { char:'🌾', name:'Sheaf of Rice', kw:['rice','harvest','grain','farming','wheat'] },
+      { char:'💐', name:'Bouquet', kw:['flowers','bouquet','gift','love','garden'] },
+      { char:'🌷', name:'Tulip', kw:['tulip','flower','spring','pink','garden'] },
+      { char:'🌹', name:'Rose', kw:['rose','love','red','romance','flower'] },
+      { char:'🥀', name:'Wilted Flower', kw:['wilted','sad','dead','flower','dying'] },
+      { char:'🌺', name:'Hibiscus', kw:['hibiscus','flower','tropical','hawaii','red'] },
+      { char:'🌸', name:'Cherry Blossom', kw:['cherry blossom','sakura','japan','spring','pink'] },
+      { char:'🌼', name:'Blossom', kw:['flower','yellow','daisy','spring','garden'] },
+      { char:'🌻', name:'Sunflower', kw:['sunflower','summer','yellow','sun','bright','flower'] },
+      { char:'🌞', name:'Sun Face', kw:['sun','happy','warm','summer','shiny','hot'] },
+      { char:'🌝', name:'Full Moon Face', kw:['moon','full','night','glow','smirk'] },
+      { char:'🌛', name:'First Quarter Moon', kw:['moon','crescent','night','first quarter'] },
+      { char:'🌜', name:'Last Quarter Moon', kw:['moon','crescent','night','last quarter'] },
+      { char:'🌚', name:'New Moon Face', kw:['moon','dark','night','new moon','ominous'] },
+      { char:'🌕', name:'Full Moon', kw:['moon','full','night','bright','round'] },
+      { char:'🌙', name:'Crescent Moon', kw:['moon','night','sleep','crescent','dark'] },
+      { char:'🪐', name:'Ringed Planet', kw:['saturn','planet','space','rings','solar system'] },
+      { char:'⭐', name:'Star', kw:['star','yellow','night','sky','celestial'] },
+      { char:'🌟', name:'Glowing Star', kw:['star','shiny','glow','sparkle','bright'] },
+      { char:'💫', name:'Dizzy', kw:['dizzy','stars','spin','sparkle','woozy'] },
+      { char:'✨', name:'Sparkles', kw:['sparkle','magic','glitter','shiny','stars','beautiful'] },
+      { char:'☄️', name:'Comet', kw:['comet','meteor','space','shooting','fast'] },
+      { char:'☀️', name:'Sun', kw:['sun','summer','hot','day','bright','weather'] },
+      { char:'🌤️', name:'Sun Small Cloud', kw:['partly cloudy','weather','sky','sun','cloud'] },
+      { char:'⛅', name:'Sun Behind Cloud', kw:['partly cloudy','cloud','weather','sky'] },
+      { char:'🌥️', name:'Cloud', kw:['cloudy','weather','sky','overcast'] },
+      { char:'☁️', name:'Cloud', kw:['cloud','weather','gray','sky','rain'] },
+      { char:'🌦️', name:'Sun Rain', kw:['sun shower','weather','rain','partly sunny'] },
+      { char:'🌧️', name:'Rain', kw:['rain','cloud','weather','rainy','shower'] },
+      { char:'⛈️', name:'Thunder Storm', kw:['storm','thunder','lightning','rain','severe'] },
+      { char:'🌩️', name:'Cloud Lightning', kw:['lightning','storm','thunder','electric'] },
+      { char:'🌨️', name:'Snow Cloud', kw:['snow','cloud','winter','blizzard','cold'] },
+      { char:'❄️', name:'Snowflake', kw:['snow','winter','cold','ice','frozen','let it go'] },
+      { char:'⛄', name:'Snowman', kw:['snowman','winter','snow','cold','olaf'] },
+      { char:'🌪️', name:'Tornado', kw:['tornado','storm','twister','wind','danger'] },
+      { char:'🌈', name:'Rainbow', kw:['rainbow','colorful','pride','happy','after rain','lgbtq'] },
+      { char:'💧', name:'Droplet', kw:['water','drop','rain','blue','liquid'] },
+      { char:'💦', name:'Sweat Droplets', kw:['water','sweat','splash','wet','swim'] },
+      { char:'🌊', name:'Water Wave', kw:['wave','ocean','sea','surf','water'] },
+      { char:'🔥', name:'Fire', kw:['fire','hot','flame','burn','lit','trending'] },
+      { char:'🌬️', name:'Wind Face', kw:['wind','blow','air','breeze','gust'] },
+      { char:'🌫️', name:'Fog', kw:['fog','mist','weather','grey','haze'] },
+    ]
+  },
+  {
+    id: 'food',
+    label: 'Food & Drink',
+    icon: '🍕',
+    emojis: [
+      { char:'🍕', name:'Pizza', kw:['pizza','food','italian','cheese','yummy','party'] },
+      { char:'🍔', name:'Hamburger', kw:['burger','food','fast food','beef','cheese'] },
+      { char:'🌮', name:'Taco', kw:['taco','mexican','food','tuesday','shell'] },
+      { char:'🌯', name:'Burrito', kw:['burrito','mexican','wrap','food','beans'] },
+      { char:'🥗', name:'Green Salad', kw:['salad','healthy','green','food','diet','veggie'] },
+      { char:'🍜', name:'Steaming Bowl', kw:['noodles','ramen','soup','bowl','asian','japanese'] },
+      { char:'🍝', name:'Spaghetti', kw:['pasta','spaghetti','italian','food','noodles'] },
+      { char:'🍲', name:'Pot of Food', kw:['stew','soup','pot','hot','comfort food'] },
+      { char:'🍛', name:'Curry', kw:['curry','indian','spicy','food','rice','yellow'] },
+      { char:'🍣', name:'Sushi', kw:['sushi','japanese','fish','rice','raw','maki'] },
+      { char:'🍱', name:'Bento Box', kw:['bento','japanese','food','lunch','box'] },
+      { char:'🍚', name:'Cooked Rice', kw:['rice','asian','food','bowl','white'] },
+      { char:'🍙', name:'Rice Ball', kw:['onigiri','japanese','rice','food','triangle'] },
+      { char:'🍘', name:'Rice Cracker', kw:['rice cracker','japanese','snack','seaweed'] },
+      { char:'🦪', name:'Oyster', kw:['oyster','seafood','shell','pearl','ocean'] },
+      { char:'🍤', name:'Fried Shrimp', kw:['shrimp','fried','seafood','tempura','prawn'] },
+      { char:'🥚', name:'Egg', kw:['egg','breakfast','shell','white','protein'] },
+      { char:'🍳', name:'Cooking', kw:['cooking','fry','pan','egg','breakfast'] },
+      { char:'🧈', name:'Butter', kw:['butter','food','dairy','spread','yellow'] },
+      { char:'🥓', name:'Bacon', kw:['bacon','breakfast','pig','crispy','food','yummy'] },
+      { char:'🥩', name:'Cut of Meat', kw:['steak','meat','beef','protein','red meat'] },
+      { char:'🍗', name:'Poultry Leg', kw:['chicken','turkey','drumstick','poultry','leg'] },
+      { char:'🍖', name:'Meat on Bone', kw:['bone','meat','bbq','grilled','food'] },
+      { char:'🌭', name:'Hot Dog', kw:['hot dog','sausage','mustard','food','baseball'] },
+      { char:'🍟', name:'French Fries', kw:['fries','mcdonalds','fast food','potato','salty'] },
+      { char:'🥪', name:'Sandwich', kw:['sandwich','lunch','bread','food','sub'] },
+      { char:'🥙', name:'Stuffed Flatbread', kw:['flatbread','wrap','falafel','gyro','pita'] },
+      { char:'🧆', name:'Falafel', kw:['falafel','middle eastern','food','crispy','vegan'] },
+      { char:'🥚', name:'Egg', kw:['egg','breakfast','protein','food'] },
+      { char:'🧀', name:'Cheese', kw:['cheese','dairy','yellow','food','mozzarella'] },
+      { char:'🥗', name:'Salad', kw:['salad','healthy','greens','veggies','food'] },
+      { char:'🥦', name:'Broccoli', kw:['broccoli','veggie','green','healthy','trees'] },
+      { char:'🥕', name:'Carrot', kw:['carrot','orange','veggie','rabbit','healthy'] },
+      { char:'🌽', name:'Corn', kw:['corn','maize','yellow','veggie','cob'] },
+      { char:'🌶️', name:'Hot Pepper', kw:['pepper','spicy','chili','hot','red','fire'] },
+      { char:'🫑', name:'Bell Pepper', kw:['pepper','vegetable','colorful','green','bell'] },
+      { char:'🍆', name:'Eggplant', kw:['eggplant','aubergine','purple','veggie','that emoji'] },
+      { char:'🥑', name:'Avocado', kw:['avocado','guac','green','millennial','toast','healthy'] },
+      { char:'🧅', name:'Onion', kw:['onion','cry','layers','vegetable','shrek'] },
+      { char:'🧄', name:'Garlic', kw:['garlic','vampire','food','flavor','italian'] },
+      { char:'🥔', name:'Potato', kw:['potato','starchy','vegetable','fry','couch potato'] },
+      { char:'🍠', name:'Roasted Sweet Potato', kw:['sweet potato','yam','roasted','food','orange'] },
+      { char:'🫛', name:'Pea Pod', kw:['peas','legume','pod','green','vegetable'] },
+      { char:'🍅', name:'Tomato', kw:['tomato','red','veggie','pizza','sauce'] },
+      { char:'🫒', name:'Olive', kw:['olive','oil','mediterranean','green','food'] },
+      { char:'🥜', name:'Peanuts', kw:['peanut','nut','allergy','snack','butter','food'] },
+      { char:'🍞', name:'Bread', kw:['bread','loaf','toast','food','wheat','bake'] },
+      { char:'🥐', name:'Croissant', kw:['croissant','french','pastry','breakfast','buttery'] },
+      { char:'🥨', name:'Pretzel', kw:['pretzel','twisted','german','snack','salty','bread'] },
+      { char:'🧁', name:'Cupcake', kw:['cupcake','cake','sweet','frosting','birthday','bake'] },
+      { char:'🍰', name:'Shortcake', kw:['cake','slice','dessert','sweet','birthday','strawberry'] },
+      { char:'🎂', name:'Birthday Cake', kw:['birthday','cake','candles','celebrate','bake'] },
+      { char:'🍮', name:'Custard', kw:['custard','flan','pudding','dessert','caramel'] },
+      { char:'🍭', name:'Lollipop', kw:['lollipop','candy','sweet','colorful','sugar'] },
+      { char:'🍬', name:'Candy', kw:['candy','sweets','sugar','halloween','treat'] },
+      { char:'🍫', name:'Chocolate Bar', kw:['chocolate','sweet','dessert','cacao','food'] },
+      { char:'🍿', name:'Popcorn', kw:['popcorn','movie','cinema','snack','corn','crunchy'] },
+      { char:'🧂', name:'Salt', kw:['salt','salty','seasoning','shaker','food','tears'] },
+      { char:'🥫', name:'Canned Food', kw:['can','tin','food','preserved','soup'] },
+      { char:'🍱', name:'Bento Box', kw:['bento','lunch','japanese','food','box'] },
+      { char:'🧃', name:'Beverage Box', kw:['juice','box','drink','capri sun','kid'] },
+      { char:'☕', name:'Hot Beverage', kw:['coffee','tea','hot','cup','morning','cafe'] },
+      { char:'🫖', name:'Teapot', kw:['tea','pot','brew','herbal','kettle'] },
+      { char:'🧋', name:'Bubble Tea', kw:['boba','bubble tea','milk tea','tapioca','drink'] },
+      { char:'🍵', name:'Teacup', kw:['tea','matcha','green tea','cup','calm','cozy'] },
+      { char:'🍺', name:'Beer Mug', kw:['beer','ale','pub','cheers','drink','alcohol'] },
+      { char:'🍻', name:'Clinking Beer Mugs', kw:['cheers','beer','toast','celebrate','drink'] },
+      { char:'🥂', name:'Clinking Glasses', kw:['champagne','cheers','toast','celebrate','wine'] },
+      { char:'🍷', name:'Wine Glass', kw:['wine','red wine','drink','romance','glass'] },
+      { char:'🥃', name:'Tumbler Glass', kw:['whiskey','bourbon','scotch','drink','neat'] },
+      { char:'🍸', name:'Cocktail', kw:['cocktail','martini','drink','party','alcohol'] },
+      { char:'🍹', name:'Tropical Drink', kw:['cocktail','tropical','hawaii','umbrella','drink'] },
+      { char:'🧉', name:'Mate', kw:['mate','tea','straw','south america','gourd','drink'] },
+      { char:'🍾', name:'Bottle Popping', kw:['champagne','celebrate','party','pop','new year'] },
+      { char:'🧊', name:'Ice', kw:['ice','cold','frozen','cube','chill','freeze'] },
+      { char:'🥤', name:'Cup Straw', kw:['soda','drink','straw','fast food','cup','juice'] },
+      { char:'🫗', name:'Pouring Liquid', kw:['pour','drink','liquid','serve','fill'] },
+      { char:'🍓', name:'Strawberry', kw:['strawberry','red','fruit','sweet','berry','summer'] },
+      { char:'🍒', name:'Cherries', kw:['cherry','red','fruit','slot machine','cute','sweet'] },
+      { char:'🍑', name:'Peach', kw:['peach','fruit','butt','pink','emoji','soft'] },
+      { char:'🥭', name:'Mango', kw:['mango','tropical','fruit','yellow','sweet','juicy'] },
+      { char:'🍍', name:'Pineapple', kw:['pineapple','tropical','fruit','yellow','spongebob'] },
+      { char:'🥥', name:'Coconut', kw:['coconut','tropical','white','fruit','beach','milk'] },
+      { char:'🍌', name:'Banana', kw:['banana','yellow','monkey','fruit','potassium','slip'] },
+      { char:'🍉', name:'Watermelon', kw:['watermelon','summer','green','red','fruit','sweet'] },
+      { char:'🍇', name:'Grapes', kw:['grapes','purple','wine','fruit','bunch','vineyard'] },
+      { char:'🍈', name:'Melon', kw:['melon','honeydew','fruit','green','sweet'] },
+      { char:'🍊', name:'Tangerine', kw:['orange','tangerine','citrus','fruit','vitamin c'] },
+      { char:'🍋', name:'Lemon', kw:['lemon','sour','citrus','yellow','fruit','tart'] },
+      { char:'🍎', name:'Red Apple', kw:['apple','red','fruit','teacher','healthy','crunchy'] },
+      { char:'🍐', name:'Pear', kw:['pear','green','fruit','sweet','shape'] },
+      { char:'🍑', name:'Peach', kw:['peach','fuzzy','fruit','summer','sweet','peach emoji'] },
+      { char:'🫐', name:'Blueberries', kw:['blueberry','blue','fruit','antioxidant','berry'] },
+      { char:'🥝', name:'Kiwi Fruit', kw:['kiwi','green','fruit','new zealand','seed'] },
+      { char:'🍓', name:'Strawberry', kw:['strawberry','berry','fruit','red','sweet','valentine'] },
+      { char:'🫒', name:'Olive', kw:['olive','tree','mediterranean','green','oil'] },
+      { char:'🥑', name:'Avocado', kw:['avocado','green','millennial','healthy','fat','toast'] },
+      { char:'🍯', name:'Honey Pot', kw:['honey','sweet','bee','jar','winnie the pooh'] },
+      { char:'🫙', name:'Jar', kw:['jar','glass','empty','preserve','container','store'] },
+      { char:'🍴', name:'Fork and Knife', kw:['utensils','eat','dinner','cutlery','fork','knife'] },
+      { char:'🥄', name:'Spoon', kw:['spoon','eat','utensil','soup','silver'] },
+    ]
+  },
+  {
+    id: 'activities',
+    label: 'Activities',
+    icon: '⚽',
+    emojis: [
+      { char:'⚽', name:'Soccer Ball', kw:['soccer','football','sport','ball','goal','game'] },
+      { char:'🏀', name:'Basketball', kw:['basketball','sport','ball','nba','hoop','game'] },
+      { char:'🏈', name:'American Football', kw:['football','nfl','sport','ball','american','game'] },
+      { char:'⚾', name:'Baseball', kw:['baseball','sport','ball','mlb','bat','game'] },
+      { char:'🥎', name:'Softball', kw:['softball','sport','ball','pitch','game'] },
+      { char:'🎾', name:'Tennis', kw:['tennis','ball','sport','racket','wimbledon','game'] },
+      { char:'🏐', name:'Volleyball', kw:['volleyball','sport','ball','beach','net','spike'] },
+      { char:'🏉', name:'Rugby Football', kw:['rugby','sport','ball','oval','tackle','game'] },
+      { char:'🥏', name:'Flying Disc', kw:['frisbee','disc','throw','flying','sport'] },
+      { char:'🎳', name:'Bowling', kw:['bowling','sport','strike','pins','ball','game'] },
+      { char:'🏏', name:'Cricket Game', kw:['cricket','sport','bat','ball','uk','game'] },
+      { char:'🏑', name:'Field Hockey', kw:['hockey','field','sport','stick','ball'] },
+      { char:'🏒', name:'Ice Hockey', kw:['hockey','ice','sport','puck','nhl','stick'] },
+      { char:'🥍', name:'Lacrosse', kw:['lacrosse','sport','stick','ball','net','game'] },
+      { char:'🏓', name:'Ping Pong', kw:['ping pong','table tennis','sport','paddle','ball'] },
+      { char:'🏸', name:'Badminton', kw:['badminton','sport','shuttle','racket','game'] },
+      { char:'🥊', name:'Boxing Glove', kw:['boxing','fight','glove','sport','punch','martial arts'] },
+      { char:'🥋', name:'Martial Arts Uniform', kw:['karate','judo','taekwondo','martial arts','gi'] },
+      { char:'⛳', name:'Flag in Hole', kw:['golf','sport','flag','hole','green','iron'] },
+      { char:'🏹', name:'Bow Arrow', kw:['archery','bow','arrow','sport','aim'] },
+      { char:'🎣', name:'Fishing Pole', kw:['fishing','fish','pole','rod','hobby','sport'] },
+      { char:'🤿', name:'Diving Mask', kw:['scuba','diving','snorkel','underwater','ocean'] },
+      { char:'🎽', name:'Running Shirt', kw:['running','shirt','sport','marathon','race'] },
+      { char:'🎿', name:'Skis', kw:['skiing','snow','winter','sport','mountain','slope'] },
+      { char:'🛷', name:'Sled', kw:['sled','snow','winter','slide','sleigh'] },
+      { char:'🥌', name:'Curling Stone', kw:['curling','sport','winter','olympics','stone','ice'] },
+      { char:'🎯', name:'Bullseye', kw:['target','dart','aim','accurate','goal','bulls eye'] },
+      { char:'🪃', name:'Boomerang', kw:['boomerang','return','throw','australia','sport'] },
+      { char:'🏋️', name:'Weight Lifting', kw:['weightlifting','gym','muscle','strong','fitness','barbell'] },
+      { char:'🤸', name:'Cartwheeling', kw:['cartwheel','gymnastics','flip','acrobat','sport'] },
+      { char:'🤼', name:'Wrestling', kw:['wrestling','fight','sport','grapple','wwe'] },
+      { char:'🤺', name:'Fencing', kw:['fencing','sword','sport','olympics','duel'] },
+      { char:'🏊', name:'Swimming', kw:['swimming','swim','pool','sport','water','laps'] },
+      { char:'🏄', name:'Surfing', kw:['surfing','wave','beach','sport','ocean','board'] },
+      { char:'🚣', name:'Rowing', kw:['rowing','boat','sport','water','oar','canoe'] },
+      { char:'🧗', name:'Climbing', kw:['climbing','rock','mountain','sport','wall','bouldering'] },
+      { char:'🚵', name:'Mountain Biking', kw:['mountain bike','cycling','sport','trail','off road'] },
+      { char:'🚴', name:'Cycling', kw:['cycling','bike','sport','ride','bicycle','race'] },
+      { char:'🏆', name:'Trophy', kw:['trophy','win','champion','award','gold','first place'] },
+      { char:'🥇', name:'First Place Medal', kw:['gold','first','win','medal','champion','1st'] },
+      { char:'🥈', name:'Second Place Medal', kw:['silver','second','medal','2nd','award'] },
+      { char:'🥉', name:'Third Place Medal', kw:['bronze','third','medal','3rd','award'] },
+      { char:'🏅', name:'Sports Medal', kw:['medal','award','sport','win','compete'] },
+      { char:'🎖️', name:'Military Medal', kw:['medal','military','honor','award','army'] },
+      { char:'🎗️', name:'Reminder Ribbon', kw:['ribbon','awareness','cause','support'] },
+      { char:'🎫', name:'Ticket', kw:['ticket','event','show','concert','entry','admit'] },
+      { char:'🎟️', name:'Admission Tickets', kw:['tickets','admission','concert','movie','event'] },
+      { char:'🎪', name:'Circus Tent', kw:['circus','tent','carnival','show','performance'] },
+      { char:'🤹', name:'Juggling', kw:['juggle','circus','skill','balls','performance'] },
+      { char:'🎭', name:'Performing Arts', kw:['theater','drama','comedy','tragedy','arts','acting'] },
+      { char:'🩰', name:'Ballet Shoes', kw:['ballet','dance','shoes','pink','performance'] },
+      { char:'🎨', name:'Artist Palette', kw:['art','paint','palette','creative','artist','color'] },
+      { char:'🎬', name:'Clapper Board', kw:['movie','film','action','cinema','direct','clapper'] },
+      { char:'🎤', name:'Microphone', kw:['mic','sing','microphone','music','karaoke','vocal'] },
+      { char:'🎧', name:'Headphones', kw:['headphones','music','listen','audio','dj','sound'] },
+      { char:'🎼', name:'Musical Score', kw:['music','notes','score','sheet','compose'] },
+      { char:'🎵', name:'Musical Note', kw:['music','note','sound','song','melody'] },
+      { char:'🎶', name:'Musical Notes', kw:['music','notes','melody','song','tune'] },
+      { char:'🥁', name:'Drum', kw:['drum','music','beat','percussion','rhythm','rock'] },
+      { char:'🪘', name:'Long Drum', kw:['drum','bongo','percussion','music','beat','conga'] },
+      { char:'🎷', name:'Saxophone', kw:['sax','saxophone','jazz','music','wind','reed'] },
+      { char:'🎺', name:'Trumpet', kw:['trumpet','jazz','music','brass','wind','tune'] },
+      { char:'🎸', name:'Guitar', kw:['guitar','music','rock','strings','strum','band'] },
+      { char:'🪕', name:'Banjo', kw:['banjo','music','country','strings','folk','bluegrass'] },
+      { char:'🎻', name:'Violin', kw:['violin','music','classical','strings','fiddle','bow'] },
+      { char:'🪗', name:'Accordion', kw:['accordion','music','squeeze','folk','polka'] },
+      { char:'🎹', name:'Musical Keyboard', kw:['piano','keyboard','music','notes','keys','classic'] },
+      { char:'🪈', name:'Flute', kw:['flute','music','wind','woodwind','notes','classical'] },
+      { char:'🎲', name:'Game Die', kw:['dice','game','luck','board game','random','roll'] },
+      { char:'♟️', name:'Chess Pawn', kw:['chess','game','strategy','board','pawn'] },
+      { char:'🎮', name:'Video Game', kw:['video game','controller','gaming','play','console','gamer'] },
+      { char:'🕹️', name:'Joystick', kw:['joystick','game','arcade','control','retro'] },
+      { char:'🧩', name:'Puzzle Piece', kw:['puzzle','jigsaw','piece','fit','autism','solve'] },
+      { char:'🧸', name:'Teddy Bear', kw:['teddy','bear','toy','cute','soft','hug'] },
+      { char:'🪆', name:'Nesting Dolls', kw:['matryoshka','russian','doll','nesting','cute'] },
+      { char:'🪅', name:'Piñata', kw:['pinata','party','mexico','candy','hit','birthday'] },
+      { char:'🎉', name:'Party Popper', kw:['party','celebrate','yay','tada','confetti','fun'] },
+      { char:'🎊', name:'Confetti Ball', kw:['confetti','party','celebrate','fun','balloon'] },
+      { char:'🎈', name:'Balloon', kw:['balloon','party','birthday','red','float','celebrate'] },
+      { char:'🎁', name:'Gift', kw:['gift','present','box','birthday','surprise','wrapped'] },
+      { char:'🎀', name:'Ribbon', kw:['ribbon','bow','gift','pink','decoration','cute'] },
+      { char:'🎄', name:'Christmas Tree', kw:['christmas','tree','xmas','holiday','celebrate'] },
+      { char:'🎆', name:'Fireworks', kw:['fireworks','celebrate','4th july','new year','boom'] },
+      { char:'🎇', name:'Sparkler', kw:['sparkler','firework','celebrate','new year','light'] },
+      { char:'🧨', name:'Firecracker', kw:['firecracker','bang','chinese new year','loud','explode'] },
+      { char:'✨', name:'Sparkles', kw:['sparkle','magic','shiny','beautiful','stars'] },
+      { char:'🎍', name:'Pine Decoration', kw:['japanese','new year','pine','bamboo','kadomatsu'] },
+      { char:'🎋', name:'Tanabata Tree', kw:['japanese','wish','bamboo','star festival'] },
+      { char:'🎏', name:'Carp Streamer', kw:['japanese','carp','wind','fish','koinobori'] },
+      { char:'🎠', name:'Carousel Horse', kw:['carousel','amusement','horse','ride','fair'] },
+    ]
+  },
+  {
+    id: 'travel',
+    label: 'Travel & Places',
+    icon: '✈️',
+    emojis: [
+      { char:'✈️', name:'Airplane', kw:['airplane','fly','travel','airport','flight','plane'] },
+      { char:'🚀', name:'Rocket', kw:['rocket','space','launch','nasa','fast','sci-fi'] },
+      { char:'🛸', name:'Flying Saucer', kw:['ufo','alien','saucer','space','flying'] },
+      { char:'🚁', name:'Helicopter', kw:['helicopter','fly','air','rotor','helo'] },
+      { char:'🚂', name:'Locomotive', kw:['train','steam','engine','rail','transport','choo choo'] },
+      { char:'🚆', name:'Train', kw:['train','rail','transport','bullet','commute'] },
+      { char:'🚇', name:'Metro', kw:['metro','subway','underground','transport','tube'] },
+      { char:'🚊', name:'Tram', kw:['tram','rail','transport','city','streetcar'] },
+      { char:'🚉', name:'Station', kw:['station','train','transport','platform','wait'] },
+      { char:'🚅', name:'High Speed Train', kw:['bullet train','shinkansen','fast','japan','train'] },
+      { char:'🚈', name:'Light Rail', kw:['light rail','train','transport','commute'] },
+      { char:'🚞', name:'Mountain Railway', kw:['mountain','train','rail','scenic','cog'] },
+      { char:'🚝', name:'Monorail', kw:['monorail','train','futuristic','disney','transport'] },
+      { char:'🚃', name:'Railway Car', kw:['train','car','rail','wagon','transport'] },
+      { char:'🚋', name:'Tram Car', kw:['tram','rail','city','streetcar','transport'] },
+      { char:'🚌', name:'Bus', kw:['bus','transport','public','city','commute','school'] },
+      { char:'🚍', name:'Oncoming Bus', kw:['bus','transport','public','city','commute'] },
+      { char:'🚎', name:'Trolleybus', kw:['trolley','bus','electric','public','transport'] },
+      { char:'🚐', name:'Minibus', kw:['minibus','van','transport','small','shuttle'] },
+      { char:'🚑', name:'Ambulance', kw:['ambulance','emergency','medical','hospital','911','siren'] },
+      { char:'🚒', name:'Fire Engine', kw:['fire truck','firefighter','red','emergency','siren','engine'] },
+      { char:'🚓', name:'Police Car', kw:['police','cop','car','law','siren','911'] },
+      { char:'🚔', name:'Oncoming Police Car', kw:['police','cop','siren','car','law'] },
+      { char:'🚕', name:'Taxi', kw:['taxi','cab','yellow','transport','ride','city'] },
+      { char:'🚖', name:'Oncoming Taxi', kw:['taxi','cab','yellow','transport'] },
+      { char:'🚗', name:'Automobile', kw:['car','drive','vehicle','auto','red','road'] },
+      { char:'🚘', name:'Oncoming Automobile', kw:['car','drive','vehicle','oncoming','road'] },
+      { char:'🚙', name:'Sport Utility Vehicle', kw:['suv','jeep','car','offroad','vehicle','truck'] },
+      { char:'🛻', name:'Pickup Truck', kw:['pickup','truck','vehicle','hauling','farm','rural'] },
+      { char:'🚚', name:'Delivery Truck', kw:['truck','delivery','package','transport','logistics'] },
+      { char:'🚛', name:'Articulated Lorry', kw:['truck','lorry','big rig','semi','freight','transport'] },
+      { char:'🚜', name:'Tractor', kw:['tractor','farm','agriculture','plow','rural','john deere'] },
+      { char:'🏎️', name:'Racing Car', kw:['race','f1','fast','formula','car','speed'] },
+      { char:'🏍️', name:'Motorcycle', kw:['motorcycle','motorbike','ride','speed','helmet'] },
+      { char:'🛵', name:'Motor Scooter', kw:['scooter','vespa','ride','moped','transport'] },
+      { char:'🦽', name:'Manual Wheelchair', kw:['wheelchair','disability','accessible','manual'] },
+      { char:'🦼', name:'Motorized Wheelchair', kw:['wheelchair','electric','disability','accessible'] },
+      { char:'🛺', name:'Auto Rickshaw', kw:['rickshaw','tuk tuk','thailand','india','transport'] },
+      { char:'🚲', name:'Bicycle', kw:['bike','bicycle','ride','cycle','pedal','green','eco'] },
+      { char:'🛴', name:'Kick Scooter', kw:['scooter','kick','ride','city','lime','bird'] },
+      { char:'🛹', name:'Skateboard', kw:['skateboard','skate','trick','cool','ollie','sport'] },
+      { char:'🛼', name:'Roller Skate', kw:['skate','roller','wheels','rink','disco','old school'] },
+      { char:'🚏', name:'Bus Stop', kw:['bus','stop','sign','wait','transport'] },
+      { char:'🛣️', name:'Motorway', kw:['highway','road','motorway','drive','fast'] },
+      { char:'🛤️', name:'Railway Track', kw:['rail','track','train','path','parallel'] },
+      { char:'⛽', name:'Fuel Pump', kw:['gas','fuel','pump','station','fill up','petrol'] },
+      { char:'🚧', name:'Construction', kw:['construction','work','barrier','caution','building'] },
+      { char:'⚓', name:'Anchor', kw:['anchor','boat','sea','navy','tattoo','stability'] },
+      { char:'🪝', name:'Hook', kw:['hook','hang','catch','pirate','fishing','hook'] },
+      { char:'⛵', name:'Sailboat', kw:['sailboat','sail','ocean','wind','boat','sea'] },
+      { char:'🛶', name:'Canoe', kw:['canoe','paddle','water','kayak','river','boat'] },
+      { char:'🚤', name:'Speedboat', kw:['speedboat','fast','water','boat','motor','wave'] },
+      { char:'🛥️', name:'Motor Boat', kw:['boat','motor','water','yacht','sea'] },
+      { char:'🛳️', name:'Passenger Ship', kw:['ship','cruise','ocean','passenger','big'] },
+      { char:'⛴️', name:'Ferry', kw:['ferry','boat','water','transport','island'] },
+      { char:'🚢', name:'Ship', kw:['ship','ocean','cruise','titanic','vessel','sea'] },
+      { char:'🛩️', name:'Small Airplane', kw:['plane','small','fly','private','jet','aviation'] },
+      { char:'🛫', name:'Airplane Departure', kw:['takeoff','depart','fly','airport','travel','vacation'] },
+      { char:'🛬', name:'Airplane Arrival', kw:['landing','arrival','fly','airport','home','travel'] },
+      { char:'🪂', name:'Parachute', kw:['parachute','jump','skydive','fall','adventure'] },
+      { char:'💺', name:'Seat', kw:['seat','chair','airplane','sit','reserved','flight'] },
+      { char:'🚁', name:'Helicopter', kw:['helicopter','helo','rotor','fly','air','rescue'] },
+      { char:'🚟', name:'Suspension Railway', kw:['suspension','rail','transport','monorail','aerial'] },
+      { char:'🚠', name:'Mountain Cableway', kw:['cable car','mountain','gondola','ski','aerial'] },
+      { char:'🚡', name:'Aerial Tramway', kw:['tram','aerial','mountain','cable','gondola'] },
+      { char:'🛰️', name:'Satellite', kw:['satellite','space','orbit','communication','tech'] },
+      { char:'🌐', name:'Globe Meridians', kw:['globe','world','earth','internet','global','network'] },
+      { char:'🗺️', name:'World Map', kw:['map','world','travel','explore','navigate','globe'] },
+      { char:'🗾', name:'Japan Map', kw:['japan','map','country','island','asia'] },
+      { char:'🧭', name:'Compass', kw:['compass','navigate','direction','north','explore','travel'] },
+      { char:'🏔️', name:'Snow Capped Mountain', kw:['mountain','snow','peak','everest','ski','hike'] },
+      { char:'⛰️', name:'Mountain', kw:['mountain','peak','hike','climb','scenic','nature'] },
+      { char:'🌋', name:'Volcano', kw:['volcano','lava','eruption','fire','mountain','hawaii'] },
+      { char:'🗻', name:'Mount Fuji', kw:['fuji','japan','mountain','snow','iconic','tokyo'] },
+      { char:'🏕️', name:'Camping', kw:['camp','tent','outdoor','nature','fire','woods'] },
+      { char:'🏖️', name:'Beach', kw:['beach','sand','sun','vacation','ocean','summer','relax'] },
+      { char:'🏜️', name:'Desert', kw:['desert','sand','hot','dune','dry','sahara','cactus'] },
+      { char:'🏝️', name:'Desert Island', kw:['island','tropical','paradise','palm','vacation','castaway'] },
+      { char:'🏞️', name:'National Park', kw:['park','nature','landscape','trees','scenic','wildlife'] },
+      { char:'🏟️', name:'Stadium', kw:['stadium','arena','sports','game','event','crowd'] },
+      { char:'🏛️', name:'Classical Building', kw:['museum','column','historic','rome','greece','architecture'] },
+      { char:'🏗️', name:'Building Construction', kw:['construction','build','scaffold','crane','progress'] },
+      { char:'🧱', name:'Brick', kw:['brick','wall','build','red','construction','mason'] },
+      { char:'🏘️', name:'Houses', kw:['houses','suburb','neighborhood','home','residential'] },
+      { char:'🏚️', name:'Derelict House', kw:['abandoned','ruin','old','haunted','falling apart'] },
+      { char:'🏠', name:'House', kw:['home','house','family','live','suburban','shelter'] },
+      { char:'🏡', name:'House Garden', kw:['home','garden','house','green','suburban','yard'] },
+      { char:'🏢', name:'Office Building', kw:['office','work','building','corporate','city','skyscraper'] },
+      { char:'🏣', name:'Japanese Post Office', kw:['post office','japan','mail','building'] },
+      { char:'🏤', name:'Post Office', kw:['post','mail','building','official','europe'] },
+      { char:'🏥', name:'Hospital', kw:['hospital','medical','health','doctor','emergency','cross'] },
+      { char:'🏦', name:'Bank', kw:['bank','money','finance','building','official'] },
+      { char:'🏨', name:'Hotel', kw:['hotel','travel','stay','room','vacation','lodging'] },
+      { char:'🏩', name:'Love Hotel', kw:['love hotel','romance','japan','hotel','night'] },
+      { char:'🏪', name:'Convenience Store', kw:['store','shop','convenience','24 hour','market'] },
+      { char:'🏫', name:'School', kw:['school','education','building','study','class'] },
+      { char:'🏬', name:'Department Store', kw:['store','mall','department','shop','retail'] },
+      { char:'🏭', name:'Factory', kw:['factory','industrial','manufacturing','smoke','building'] },
+      { char:'🗼', name:'Tokyo Tower', kw:['tokyo','japan','tower','eiffel','landmark','orange'] },
+      { char:'🗽', name:'Statue of Liberty', kw:['liberty','new york','usa','statue','freedom','torch'] },
+      { char:'⛪', name:'Church', kw:['church','worship','religion','cross','christian','building'] },
+      { char:'🕌', name:'Mosque', kw:['mosque','islam','muslim','worship','religion','dome'] },
+      { char:'🛕', name:'Hindu Temple', kw:['temple','hindu','india','worship','religion'] },
+      { char:'🕍', name:'Synagogue', kw:['synagogue','jewish','worship','star of david','temple'] },
+      { char:'⛩️', name:'Shinto Shrine', kw:['shrine','shinto','japan','torii','gate','religion'] },
+      { char:'🗿', name:'Moai', kw:['moai','easter island','stone','face','mysterious','statue'] },
+      { char:'🗺️', name:'World Map', kw:['map','world','earth','travel','explorer','atlas'] },
+      { char:'🗼', name:'Tokyo Tower', kw:['tower','tokyo','japan','red','landmark'] },
+    ]
+  },
+  {
+    id: 'objects',
+    label: 'Objects',
+    icon: '💡',
+    emojis: [
+      { char:'💡', name:'Light Bulb', kw:['idea','bulb','light','bright','innovation','think'] },
+      { char:'🔦', name:'Flashlight', kw:['flashlight','torch','light','dark','batteries'] },
+      { char:'🕯️', name:'Candle', kw:['candle','flame','birthday','romantic','light','wax'] },
+      { char:'💻', name:'Laptop', kw:['laptop','computer','work','tech','mac','coding'] },
+      { char:'🖥️', name:'Desktop Computer', kw:['computer','desktop','monitor','screen','pc','mac'] },
+      { char:'🖨️', name:'Printer', kw:['printer','print','paper','office','ink','document'] },
+      { char:'⌨️', name:'Keyboard', kw:['keyboard','type','computer','keys','tech'] },
+      { char:'🖱️', name:'Computer Mouse', kw:['mouse','click','computer','cursor','point','tech'] },
+      { char:'💾', name:'Floppy Disk', kw:['floppy','disk','save','retro','old school','storage'] },
+      { char:'💿', name:'CD', kw:['cd','disc','music','optical','burn','90s','data'] },
+      { char:'📀', name:'DVD', kw:['dvd','disc','movie','data','optical','video'] },
+      { char:'📱', name:'Mobile Phone', kw:['phone','mobile','smartphone','call','text','iphone'] },
+      { char:'☎️', name:'Telephone', kw:['phone','call','telephone','dial','retro','landline'] },
+      { char:'📞', name:'Telephone Receiver', kw:['phone','call','receiver','talk','dial'] },
+      { char:'📟', name:'Pager', kw:['pager','beeper','90s','retro','message','old'] },
+      { char:'📠', name:'Fax Machine', kw:['fax','office','send','retro','document','old'] },
+      { char:'📺', name:'Television', kw:['tv','television','watch','screen','channel','show'] },
+      { char:'📷', name:'Camera', kw:['camera','photo','picture','snapshot','photography'] },
+      { char:'📸', name:'Camera Flash', kw:['camera','photo','flash','picture','photography','selfie'] },
+      { char:'📹', name:'Video Camera', kw:['video','film','record','camera','movie'] },
+      { char:'🎥', name:'Movie Camera', kw:['film','movie','record','cinema','director'] },
+      { char:'📽️', name:'Film Projector', kw:['projector','film','cinema','movie','retro','theater'] },
+      { char:'🎞️', name:'Film Frames', kw:['film','frames','strip','movie','cinema','photography'] },
+      { char:'📞', name:'Telephone Receiver', kw:['phone','receiver','call','talk'] },
+      { char:'🔭', name:'Telescope', kw:['telescope','space','stars','astronomy','observe','science'] },
+      { char:'🔬', name:'Microscope', kw:['microscope','science','biology','lab','research','small'] },
+      { char:'🧬', name:'DNA', kw:['dna','genetics','biology','science','helix','gene'] },
+      { char:'⚗️', name:'Alembic', kw:['chemistry','lab','flask','experiment','science','potion'] },
+      { char:'🧪', name:'Test Tube', kw:['test tube','science','lab','chemistry','experiment'] },
+      { char:'🧫', name:'Petri Dish', kw:['petri dish','science','biology','culture','lab','bacteria'] },
+      { char:'🧲', name:'Magnet', kw:['magnet','attract','metal','pull','science','pole'] },
+      { char:'💊', name:'Pill', kw:['pill','medicine','drug','health','tablet','pharmacy'] },
+      { char:'💉', name:'Syringe', kw:['syringe','injection','vaccine','blood','medical','needle'] },
+      { char:'🩺', name:'Stethoscope', kw:['stethoscope','doctor','medical','heart','listen','health'] },
+      { char:'🩹', name:'Adhesive Bandage', kw:['bandage','boo boo','heal','wound','plaster','aid'] },
+      { char:'🚪', name:'Door', kw:['door','open','close','knock','entry','exit','home'] },
+      { char:'🪑', name:'Chair', kw:['chair','seat','sit','furniture','wood'] },
+      { char:'🚽', name:'Toilet', kw:['toilet','bathroom','wc','flush','pee','bathroom humor'] },
+      { char:'🪠', name:'Plunger', kw:['plunger','clog','toilet','plumber','fix','drain'] },
+      { char:'🚿', name:'Shower', kw:['shower','bath','clean','wash','water','hygiene'] },
+      { char:'🛁', name:'Bathtub', kw:['bath','tub','soak','relax','water','clean'] },
+      { char:'🪒', name:'Razor', kw:['shave','razor','blade','trim','beard','grooming'] },
+      { char:'🪥', name:'Toothbrush', kw:['toothbrush','brush','teeth','clean','oral','hygiene'] },
+      { char:'🧼', name:'Soap', kw:['soap','clean','wash','hygiene','bubble','lather'] },
+      { char:'🧽', name:'Sponge', kw:['sponge','clean','wash','absorbent','scrub','spongebob'] },
+      { char:'🪣', name:'Bucket', kw:['bucket','pail','water','list','kick the bucket','clean'] },
+      { char:'🧹', name:'Broom', kw:['broom','sweep','clean','witch','harry potter','mop'] },
+      { char:'🧺', name:'Basket', kw:['basket','laundry','wicker','weave','storage'] },
+      { char:'🧻', name:'Roll of Paper', kw:['toilet paper','paper','roll','tp','tissue'] },
+      { char:'🪤', name:'Mouse Trap', kw:['trap','mouse','catch','cheese','spring','wooden'] },
+      { char:'🧯', name:'Fire Extinguisher', kw:['fire','extinguisher','safety','emergency','put out'] },
+      { char:'🛒', name:'Shopping Cart', kw:['cart','shopping','grocery','retail','buy','trolley'] },
+      { char:'🚬', name:'Cigarette', kw:['cigarette','smoke','tobacco','no smoking','ban'] },
+      { char:'⚰️', name:'Coffin', kw:['coffin','death','funeral','burial','vampire','rip'] },
+      { char:'⚱️', name:'Funeral Urn', kw:['urn','ash','funeral','cremation','death'] },
+      { char:'🏺', name:'Amphora', kw:['amphora','greek','ancient','vase','jar','pottery'] },
+      { char:'🔑', name:'Key', kw:['key','lock','open','secure','house','access'] },
+      { char:'🗝️', name:'Old Key', kw:['key','old','antique','lock','skeleton','retro'] },
+      { char:'🔐', name:'Locked with Key', kw:['locked','secure','key','lock','private'] },
+      { char:'🔒', name:'Locked', kw:['locked','secure','private','padlock','closed'] },
+      { char:'🔓', name:'Unlocked', kw:['unlocked','open','access','padlock','free'] },
+      { char:'🔨', name:'Hammer', kw:['hammer','tool','hit','nail','build','mcmc','fix'] },
+      { char:'⚒️', name:'Hammer Pick', kw:['hammer','pick','tool','mine','build','work'] },
+      { char:'🛠️', name:'Hammer Wrench', kw:['tools','fix','repair','build','DIY','wrench'] },
+      { char:'⛏️', name:'Pick', kw:['pick','mine','dig','minecraft','tool','axe'] },
+      { char:'⚙️', name:'Gear', kw:['gear','settings','cog','tech','mechanism','engineering'] },
+      { char:'🔩', name:'Nut and Bolt', kw:['nut','bolt','hardware','fix','screw','tool'] },
+      { char:'🪛', name:'Screwdriver', kw:['screwdriver','tool','fix','turn','screw','repair'] },
+      { char:'🔧', name:'Wrench', kw:['wrench','tool','fix','repair','plumber','adjust'] },
+      { char:'🪚', name:'Carpentry Saw', kw:['saw','cut','carpenter','wood','tool','hack'] },
+      { char:'🔪', name:'Kitchen Knife', kw:['knife','cut','cook','blade','sharp','kitchen'] },
+      { char:'🗡️', name:'Dagger', kw:['dagger','weapon','knife','fantasy','medieval','stab'] },
+      { char:'⚔️', name:'Crossed Swords', kw:['swords','fight','clash','battle','medieval','war'] },
+      { char:'🛡️', name:'Shield', kw:['shield','protect','defense','knight','medieval','security'] },
+      { char:'🏹', name:'Bow Arrow', kw:['bow','arrow','archery','aim','cupid','sport'] },
+      { char:'🪃', name:'Boomerang', kw:['boomerang','return','throw','australia','hunt'] },
+      { char:'🪖', name:'Military Helmet', kw:['helmet','military','army','war','protect','soldier'] },
+      { char:'💎', name:'Gem Stone', kw:['diamond','gem','jewel','precious','bling','expensive'] },
+      { char:'💍', name:'Ring', kw:['ring','diamond','wedding','engagement','marriage','bling'] },
+      { char:'👑', name:'Crown', kw:['crown','king','queen','royalty','power','win'] },
+      { char:'💄', name:'Lipstick', kw:['lipstick','makeup','beauty','red','cosmetic','glam'] },
+      { char:'👜', name:'Handbag', kw:['handbag','purse','bag','fashion','woman','style'] },
+      { char:'👝', name:'Clutch Bag', kw:['purse','bag','clutch','small','fashion','wallet'] },
+      { char:'🎒', name:'Backpack', kw:['backpack','bag','school','travel','hike','carry'] },
+      { char:'🧳', name:'Luggage', kw:['luggage','travel','suitcase','bag','vacation','trip'] },
+      { char:'💼', name:'Briefcase', kw:['briefcase','work','business','professional','case','job'] },
+      { char:'👓', name:'Glasses', kw:['glasses','spectacles','see','nerd','read','vision'] },
+      { char:'🕶️', name:'Sunglasses', kw:['sunglasses','cool','shade','sun','uv','stylish'] },
+      { char:'🥽', name:'Goggles', kw:['goggles','protect','swim','lab','safety','eyes'] },
+      { char:'🌂', name:'Closed Umbrella', kw:['umbrella','rain','closed','portable','wet'] },
+      { char:'☂️', name:'Umbrella', kw:['umbrella','rain','open','wet','shelter','parasol'] },
+      { char:'🧵', name:'Thread', kw:['thread','sew','stitch','needle','craft','knit'] },
+      { char:'🪡', name:'Spool of Thread', kw:['thread','spool','sew','craft','stitch','bobbin'] },
+      { char:'🧶', name:'Yarn', kw:['yarn','knit','crochet','craft','ball','fiber'] },
+      { char:'🪢', name:'Knot', kw:['knot','rope','tie','tangle','macrame','nautical'] },
+    ]
+  },
+  {
+    id: 'symbols',
+    label: 'Symbols',
+    icon: '❤️',
+    emojis: [
+      { char:'❤️', name:'Red Heart', kw:['heart','love','red','romance','care','passion'] },
+      { char:'🧡', name:'Orange Heart', kw:['heart','love','orange','warm','care'] },
+      { char:'💛', name:'Yellow Heart', kw:['heart','love','yellow','happiness','sun','friendship'] },
+      { char:'💚', name:'Green Heart', kw:['heart','love','green','nature','health','envy'] },
+      { char:'💙', name:'Blue Heart', kw:['heart','love','blue','cool','water','loyalty'] },
+      { char:'💜', name:'Purple Heart', kw:['heart','love','purple','military','care'] },
+      { char:'🖤', name:'Black Heart', kw:['heart','black','dark','love','goth','cool'] },
+      { char:'🤍', name:'White Heart', kw:['heart','white','pure','love','care','clean'] },
+      { char:'🤎', name:'Brown Heart', kw:['heart','brown','love','earth','chocolate','warm'] },
+      { char:'💔', name:'Broken Heart', kw:['heartbreak','broken','sad','love','hurt','split'] },
+      { char:'❣️', name:'Heart Exclamation', kw:['heart','exclamation','love','emphasis','yes'] },
+      { char:'💕', name:'Two Hearts', kw:['hearts','love','couple','romance','together'] },
+      { char:'💞', name:'Revolving Hearts', kw:['hearts','revolving','spin','love','flutter','romance'] },
+      { char:'💓', name:'Beating Heart', kw:['heart','beat','pulse','love','alive'] },
+      { char:'💗', name:'Growing Heart', kw:['heart','grow','big','love','expand','pink'] },
+      { char:'💖', name:'Sparkling Heart', kw:['heart','sparkle','love','pink','glitter'] },
+      { char:'💘', name:'Heart Arrow', kw:['heart','cupid','arrow','love','struck','valentine'] },
+      { char:'💝', name:'Heart Ribbon', kw:['heart','ribbon','gift','love','bow','pink'] },
+      { char:'💟', name:'Heart Decoration', kw:['heart','decoration','love','purple','ornament'] },
+      { char:'❤️‍🔥', name:'Heart on Fire', kw:['fire heart','passion','burning love','desire','intense'] },
+      { char:'❤️‍🩹', name:'Mending Heart', kw:['healing','repair','recovery','broken heart','mend'] },
+      { char:'🩷', name:'Pink Heart', kw:['pink','heart','love','soft','cute','kawaii'] },
+      { char:'🩵', name:'Light Blue Heart', kw:['light blue','heart','love','sky','serene'] },
+      { char:'🩶', name:'Grey Heart', kw:['grey','heart','neutral','love','silver'] },
+      { char:'☮️', name:'Peace Symbol', kw:['peace','hippie','60s','calm','dove','symbol'] },
+      { char:'✝️', name:'Cross', kw:['cross','christian','church','faith','religion','jesus'] },
+      { char:'☪️', name:'Star Crescent', kw:['islam','muslim','crescent','moon','star','religion'] },
+      { char:'🕉️', name:'Om', kw:['om','hindu','spiritual','yoga','meditation','india'] },
+      { char:'✡️', name:'Star of David', kw:['star of david','jewish','israel','judaism','religion'] },
+      { char:'☯️', name:'Yin Yang', kw:['yin yang','balance','duality','taoism','harmony'] },
+      { char:'🔯', name:'Dotted Six Star', kw:['star','hexagram','jewish','magen david'] },
+      { char:'🛐', name:'Place of Worship', kw:['worship','pray','church','mosque','temple','religion'] },
+      { char:'⛎', name:'Ophiuchus', kw:['ophiuchus','zodiac','star','13th sign','astronomy'] },
+      { char:'♈', name:'Aries', kw:['aries','zodiac','ram','horoscope','star sign','astrology'] },
+      { char:'♉', name:'Taurus', kw:['taurus','zodiac','bull','horoscope','star sign'] },
+      { char:'♊', name:'Gemini', kw:['gemini','zodiac','twins','horoscope','star sign'] },
+      { char:'♋', name:'Cancer', kw:['cancer','zodiac','crab','horoscope','star sign'] },
+      { char:'♌', name:'Leo', kw:['leo','zodiac','lion','horoscope','star sign'] },
+      { char:'♍', name:'Virgo', kw:['virgo','zodiac','horoscope','star sign','maiden'] },
+      { char:'♎', name:'Libra', kw:['libra','zodiac','scales','balance','horoscope','star sign'] },
+      { char:'♏', name:'Scorpio', kw:['scorpio','zodiac','scorpion','horoscope','star sign'] },
+      { char:'♐', name:'Sagittarius', kw:['sagittarius','zodiac','arrow','horoscope','star sign'] },
+      { char:'♑', name:'Capricorn', kw:['capricorn','zodiac','goat','horoscope','star sign'] },
+      { char:'♒', name:'Aquarius', kw:['aquarius','zodiac','water','horoscope','star sign'] },
+      { char:'♓', name:'Pisces', kw:['pisces','zodiac','fish','horoscope','star sign'] },
+      { char:'🆔', name:'ID Button', kw:['id','identity','badge','button','blue'] },
+      { char:'⚛️', name:'Atom Symbol', kw:['atom','science','nuclear','physics','element','chemistry'] },
+      { char:'🉑', name:'Acceptable CJK', kw:['acceptable','chinese','button','cjk','japanese'] },
+      { char:'☢️', name:'Radioactive', kw:['radioactive','nuclear','danger','radiation','warning'] },
+      { char:'☣️', name:'Biohazard', kw:['biohazard','danger','warning','biological','hazmat'] },
+      { char:'📴', name:'Mobile Off', kw:['phone off','silent','no mobile','muted'] },
+      { char:'📳', name:'Vibration Mode', kw:['vibrate','phone','silent','buzz','mode'] },
+      { char:'📵', name:'No Mobile', kw:['no phone','forbidden','ban','off','quiet'] },
+      { char:'📞', name:'Telephone Receiver', kw:['call','phone','dial','talk','receiver'] },
+      { char:'🔞', name:'No One Under 18', kw:['adults only','18+','mature','restricted','age'] },
+      { char:'🔕', name:'Bell with Slash', kw:['mute','silent','bell off','quiet','notification off'] },
+      { char:'🔇', name:'Muted Speaker', kw:['mute','silent','speaker off','no sound'] },
+      { char:'🔈', name:'Low Volume', kw:['volume','low','speaker','sound','soft'] },
+      { char:'🔉', name:'Medium Volume', kw:['volume','medium','speaker','sound'] },
+      { char:'🔊', name:'High Volume', kw:['volume','loud','speaker','sound','max'] },
+      { char:'📣', name:'Megaphone', kw:['megaphone','announce','loud','cheer','amplify'] },
+      { char:'📢', name:'Loudspeaker', kw:['loudspeaker','announce','public','broadcast','loud'] },
+      { char:'🔔', name:'Bell', kw:['bell','ring','notification','alert','ding'] },
+      { char:'🔕', name:'Bell Slash', kw:['no bell','silent','mute','no notification'] },
+      { char:'🎵', name:'Musical Note', kw:['music','note','sound','sing','melody'] },
+      { char:'🎶', name:'Musical Notes', kw:['music','notes','melody','tune','song'] },
+      { char:'📣', name:'Cheering Megaphone', kw:['megaphone','cheer','announce','loud','sports'] },
+      { char:'📯', name:'Postal Horn', kw:['horn','bugle','call','postal','signal'] },
+      { char:'🔔', name:'Bell', kw:['bell','ring','alert','notification','ding'] },
+      { char:'💹', name:'Chart Increasing Yen', kw:['chart','stock','yen','up','green','market'] },
+      { char:'💱', name:'Currency Exchange', kw:['currency','exchange','money','forex','bank'] },
+      { char:'💲', name:'Dollar Sign', kw:['dollar','money','usd','sign','cash','currency'] },
+      { char:'💰', name:'Money Bag', kw:['money','bag','rich','cash','dollar','coins'] },
+      { char:'💵', name:'Dollar Banknote', kw:['dollar','money','cash','bill','green','usd'] },
+      { char:'💴', name:'Yen Banknote', kw:['yen','money','japan','bill','cash','currency'] },
+      { char:'💶', name:'Euro Banknote', kw:['euro','money','europe','bill','cash','eur'] },
+      { char:'💷', name:'Pound Banknote', kw:['pound','money','uk','britain','gbp','bill','cash'] },
+      { char:'💸', name:'Money Wings', kw:['money','flying','spend','expensive','waste','cash'] },
+      { char:'💳', name:'Credit Card', kw:['credit card','pay','swipe','bank','money','card'] },
+      { char:'🪙', name:'Coin', kw:['coin','money','gold','silver','currency','token'] },
+      { char:'🏧', name:'ATM', kw:['atm','bank','machine','cash','withdraw','money'] },
+      { char:'✉️', name:'Envelope', kw:['email','letter','mail','envelope','send','message'] },
+      { char:'📧', name:'Email', kw:['email','at sign','electronic','message','mail','inbox'] },
+      { char:'📨', name:'Incoming Envelope', kw:['incoming','email','letter','mail','receive'] },
+      { char:'📩', name:'Envelope Arrow', kw:['email','down','arrow','download','receive','mail'] },
+      { char:'📪', name:'Mailbox Closed', kw:['mailbox','closed','letter','mail','box','empty'] },
+      { char:'📫', name:'Mailbox', kw:['mailbox','letter','mail','box','full','receive'] },
+      { char:'📬', name:'Open Mailbox Flag', kw:['mailbox','open','flag up','letter','full'] },
+      { char:'📭', name:'Open Mailbox No Flag', kw:['mailbox','open','empty','flag down','letter'] },
+      { char:'📮', name:'Postbox', kw:['postbox','mail','letter','send','post','red'] },
+      { char:'✅', name:'Check Mark Button', kw:['check','yes','done','correct','complete','tick','green'] },
+      { char:'❌', name:'Cross Mark', kw:['no','cross','x','wrong','false','delete','close'] },
+      { char:'❎', name:'Cross Mark Button', kw:['no','cross','button','wrong','x','false'] },
+      { char:'🆗', name:'OK Button', kw:['ok','button','good','blue','agree','fine'] },
+      { char:'🆕', name:'New Button', kw:['new','button','blue','fresh','label','badge'] },
+      { char:'🔝', name:'Top Arrow', kw:['top','up','button','red','arrow','highest'] },
+      { char:'🔛', name:'On Arrow', kw:['on','arrow','button','activated','enabled'] },
+      { char:'🔜', name:'Soon Arrow', kw:['soon','arrow','coming','future','button'] },
+      { char:'🔚', name:'End Arrow', kw:['end','arrow','stop','finish','button'] },
+      { char:'🆙', name:'Up Button', kw:['up','button','blue','upgrade','raise','above'] },
+      { char:'🆒', name:'Cool Button', kw:['cool','button','blue','slang','nice','swag'] },
+      { char:'🆓', name:'Free Button', kw:['free','button','blue','gratis','no cost'] },
+      { char:'🆖', name:'NG Button', kw:['ng','no good','button','negative','wrong','bad'] },
+      { char:'🅰️', name:'Blood Type A', kw:['a','blood type','square','button'] },
+      { char:'🅱️', name:'Blood Type B', kw:['b','blood type','square','button','meme'] },
+      { char:'🆎', name:'AB Button', kw:['ab','blood type','square','button'] },
+      { char:'🅾️', name:'O Button', kw:['o','blood type','circle','button','correct'] },
+      { char:'♾️', name:'Infinity', kw:['infinity','forever','loop','endless','math','symbol'] },
+      { char:'🔁', name:'Repeat Button', kw:['repeat','loop','arrows','cycle','again'] },
+      { char:'🔂', name:'Repeat Single', kw:['repeat','single','loop','once','song'] },
+      { char:'▶️', name:'Play Button', kw:['play','start','video','music','green','triangle'] },
+      { char:'⏩', name:'Fast Forward', kw:['fast forward','skip','speed','double','arrow'] },
+      { char:'⏪', name:'Rewind', kw:['rewind','back','fast','previous','arrow'] },
+      { char:'⏫', name:'Fast Up', kw:['up','fast','double','arrow','raise'] },
+      { char:'⏬', name:'Fast Down', kw:['down','fast','double','arrow','lower'] },
+      { char:'⏸️', name:'Pause Button', kw:['pause','wait','hold','music','video','stop'] },
+      { char:'⏹️', name:'Stop Button', kw:['stop','square','end','halt','music','video'] },
+      { char:'⏺️', name:'Record Button', kw:['record','red','dot','capture','video','audio'] },
+      { char:'⏏️', name:'Eject Button', kw:['eject','remove','disc','button','up'] },
+      { char:'🔀', name:'Shuffle', kw:['shuffle','random','mix','playlist','arrows'] },
+      { char:'♀️', name:'Female Sign', kw:['female','woman','gender','venus','symbol'] },
+      { char:'♂️', name:'Male Sign', kw:['male','man','gender','mars','symbol'] },
+      { char:'⚧️', name:'Transgender Symbol', kw:['transgender','trans','gender','symbol','pride'] },
+    ]
+  },
+
+{
+  id: 'custom_symbols', // Nayi category ki unique ID
+  label: 'Special Symbols', // UI par dikhne wala naam
+  icon: '⭐', // Category icon
+  emojis: [
+    // --- Card Suits & Hearts ---
+    { char:'♧', name:'white club suit', kw:['club','card','suit','white','playing card'] },
+    { char:'♣', name:'club suit', kw:['club','card','suit','playing card','spades'] },
+    { char:'◇', name:'white diamond', kw:['diamond','white','shape','playing card','suit'] },
+    { char:'♦', name:'diamond suit', kw:['diamond','card','suit','playing card','red'] },
+    { char:'♡', name:'white heart suit', kw:['heart','white','card','suit','playing card'] },
+    { char:'♥', name:'heart suit', kw:['heart','card','suit','red','playing card','love'] },
+    { char:'♤', name:'white spade suit', kw:['spade','white','card','suit','playing card'] },
+    { char:'♠', name:'spade suit', kw:['spade','card','suit','playing card','black'] },
+    
+    // --- Stars, Sparkles & Badges ---
+    { char:'☆', name:'white star', kw:['star','white','empty','hollow','outline','five'] },
+    { char:'★', name:'black star', kw:['star','black','filled','solid','favorite'] },
+    { char:'✧', name:'white four point star', kw:['star','sparkle','four','glitter','shiny','outline'] },
+    { char:'✦', name:'black four point star', kw:['star','sparkle','four','filled','solid','dark','icon'] },
+    { char:'✶', name:'Six Pointed Black Star', kw:['star','six','filled','solid','dark'] },
+    { char:'✷', name:'Eight Pointed Black Star', kw:['star','eight','filled','solid','dark'] },
+    { char:'✸', name:'Heavy Eight Pointed Star', kw:['star','burst','sharp','filled','dark'] },
+    { char:'✹', name:'Twelve Pointed Black Star', kw:['star','burst','sunburst','spike'] },
+    { char:'✺', name:'Sixteen Pointed Asterisk', kw:['star','burst','flower','spikes'] },
+    { char:'✪', name:'Circled White Star', kw:['star','circle','badge','logo'] },
+    { char:'✫', name:'Open Centre Black Star', kw:['star','outline','badge'] },
+    { char:'✬', name:'Black Star Centre White', kw:['star','design','logo'] },
+    { char:'☄', name:'comet symbol', kw:['comet','space','star','astronomy'] },
+    
+    // --- Squares, Blocks & Bars ---
+    { char:'■', name:'black large square', kw:['square','black','filled','block','solid','dark'] },
+    { char:'□', name:'white large square', kw:['square','white','empty','hollow','box','outline'] },
+    { char:'▪', name:'black small square', kw:['square','small','black','bullet','dot','dark'] },
+    { char:'▫', name:'white small square', kw:['square','small','white','bullet','empty','outline'] },
+    { char:'▬', name:'Black Rectangle', kw:['rectangle','bar','filled','solid','dark','minus'] },
+    { char:'▮', name:'Black Vertical Rectangle', kw:['rectangle','vertical','filled','solid','bar','dark'] },
+    { char:'▯', name:'White Vertical Rectangle', kw:['rectangle','vertical','outline','hollow','white'] },
+    { char:'▰', name:'Geometric Block Geometric', kw:['block','shape','loading','progress'] },
+    { char:'▱', name:'Geometric Block Outline', kw:['block','shape','loading','progress','outline'] },
+    { char:'▊', name:'Vertical Block Seven Eighths', kw:['block','bar','progress','loading'] },
+    { char:'▌', name:'Left Half Block', kw:['block','bar','split','half'] },
+    { char:'▐', name:'Right Half Block', kw:['block','bar','split','half'] },
+    { char:'▀', name:'Top Half Block', kw:['block','bar','split','half','top'] },
+    { char:'▄', name:'Bottom Half Block', kw:['block','bar','split','half','bottom'] },
+    { char:'█', name:'Full Block', kw:['block','solid','square','filled','bar'] },
+    
+    // --- Circles, Dots & Half-Moons ---
+    { char:'●', name:'black large circle', kw:['circle','black','filled','dot','solid','dark','blob'] },
+    { char:'○', name:'white large circle', kw:['circle','white','empty','hollow','ring','outline'] },
+    { char:'◎', name:'double circle / bullseye', kw:['circle','double','target','bullseye','ring'] },
+    { char:'⦿', name:'Circled Bullet', kw:['circle','bullet','dot','target','center'] },
+    { char:'∙', name:'Bullet Dot', kw:['dot','bullet','small','point','center'] },
+    { char:'⊙', name:'Circled Dot Operator', kw:['circle','dot','math','center','operator'] },
+    { char:'◑', name:'Circle Half Filled', kw:['circle','half','moon','pie','contrast'] },
+    { char:'◐', name:'Circle Left Half Filled', kw:['circle','half','split','contrast'] },
+    { char:'◒', name:'Circle Bottom Half Filled', kw:['circle','half','split','bottom'] },
+    { char:'◓', name:'Circle Top Half Filled', kw:['circle','half','split','top'] },
+    { char:'◖', name:'Left Half Circle', kw:['circle','half','arc','left'] },
+    { char:'◗', name:'Right Half Circle', kw:['circle','half','arc','right'] },
+    { char:'◌', name:'Dotted Circle', kw:['circle','dotted','placeholder','ring'] },
+    
+    // --- Triangles & Pointers ---
+    { char:'▲', name:'black up triangle', kw:['triangle','up','black','arrow','solid','dark','top'] },
+    { char:'▼', name:'black down triangle', kw:['triangle','down','black','arrow','solid','dark','bottom'] },
+    { char:'◀', name:'black left triangle', kw:['triangle','left','black','arrow','back','dark'] },
+    { char:'▶', name:'black right triangle', kw:['triangle','right','black','arrow','play','dark'] },
+    { char:'△', name:'White Up Triangle', kw:['triangle','up','white','outline','hollow'] },
+    { char:'▽', name:'White Down Triangle', kw:['triangle','down','white','outline','hollow'] },
+    { char:'◁', name:'White Left Triangle', kw:['triangle','left','white','outline','hollow'] },
+    { char:'▷', name:'White Right Triangle', kw:['triangle','right','white','outline','hollow'] },
+    { char:'▲', name:'Black Up Triangle', kw:['triangle','up','filled','solid','arrow'] },
+    { char:'▼', name:'Black Down Triangle', kw:['triangle','down','filled','solid','arrow'] },
+    { char:'◤', name:'Top Left Triangle', kw:['triangle','corner','angle','block'] },
+    { char:'◥', name:'Top Right Triangle', kw:['triangle','corner','angle','block'] },
+    { char:'◣', name:'Bottom Left Triangle', kw:['triangle','corner','angle','block'] },
+    { char:'◢', name:'Bottom Right Triangle', kw:['triangle','corner','angle','block'] },
+    
+    // --- Diamonds & Lozenges ---
+    { char:'◆', name:'black diamond', kw:['diamond','black','filled','solid','rhombus','dark'] },
+    { char:'◇', name:'white diamond shape', kw:['diamond','white','empty','hollow','outline','rhombus'] },
+    { char:'◈', name:'square with diamond', kw:['square','diamond','combo','shape','pattern','icon'] },
+    { char:'◊', name:'lozenge', kw:['diamond','lozenge','shape','hollow','outline'] },
+    { char:'⬪', name:'Small White Diamond', kw:['diamond','small','outline','hollow'] },
+    { char:'⬫', name:'Small Black Diamond', kw:['diamond','small','filled','solid'] },
+    
+    // --- Brackets, Quotes & Parentheses ---
+    { char:'《', name:'double angle bracket left', kw:['bracket','left','angle','double','guillemet','quote'] },
+    { char:'》', name:'double angle bracket right', kw:['bracket','right','angle','double','guillemet','quote'] },
+    { char:'«', name:'left double angle quote', kw:['quote','left','guillemet','french','double angle'] },
+    { char:'»', name:'right double angle quote', kw:['quote','right','guillemet','french','double angle'] },
+    { char:'‹', name:'left single angle quote', kw:['quote','left','guillemet','single','angle'] },
+    { char:'›', name:'right single angle quote', kw:['quote','right','guillemet','single','angle'] },
+    { char:'「', name:'corner bracket left', kw:['bracket','left','corner','asian','quote'] },
+    { char:'」', name:'corner bracket right', kw:['bracket','right','corner','asian','quote'] },
+    { char:'『', name:'Double Corner Bracket Left', kw:['bracket','left','corner','asian','double'] },
+    { char:'』', name:'Double Corner Bracket Right', kw:['bracket','right','corner','asian','double'] },
+    { char:'【', name:'Lenticular Bracket Left', kw:['bracket','left','thick','black','bold'] },
+    { char:'】', name:'Lenticular Bracket Right', kw:['bracket','right','thick','black','bold'] },
+    { char:'〔', name:'Tortoise Shell Bracket Left', kw:['bracket','left','shell'] },
+    { char:'〕', name:'Tortoise Shell Bracket Right', kw:['bracket','right','shell'] },
+    
+    // --- Typographic & Legal Symbols ---
+    { char:'†', name:'dagger symbol', kw:['dagger','symbol','cross','obelisk','footnote'] },
+    { char:'‡', name:'double dagger', kw:['double dagger','footnote','symbol','reference'] },
+    { char:'§', name:'section sign', kw:['section','legal','paragraph','law','§'] },
+    { char:'¶', name:'pilcrow', kw:['paragraph','pilcrow','sign','text','editor'] },
+    { char:'©', name:'copyright sign', kw:['copyright','circle c','intellectual property','rights'] },
+    { char:'®', name:'registered sign', kw:['registered','trademark','circle r','brand'] },
+    { char:'™', name:'trade mark sign', kw:['trademark','trade mark','brand','superscript'] },
+    
+    // --- Math, Science & Operators ---
+    { char:'°', name:'degree sign', kw:['degree','circle','angle','temperature','°'] },
+    { char:'±', name:'plus minus sign', kw:['plus minus','math','tolerance','approximately','±'] },
+    { char:'×', name:'multiplication sign', kw:['multiply','times','cross','math','×'] },
+    { char:'÷', name:'division sign', kw:['divide','math','slash','division','÷'] },
+    { char:'≠', name:'not equal to', kw:['not equal','math','inequality','different','≠'] },
+    { char:'≈', name:'almost equal to', kw:['approximately','tilde','math','similar','≈'] },
+    { char:'≤', name:'less than or equal to', kw:['less equal','math','comparison','≤'] },
+    { char:'≥', name:'greater than or equal to', kw:['greater equal','math','comparison','≥'] },
+    { char:'∞', name:'infinity', kw:['infinity','endless','forever','math','∞','loop'] },
+    { char:'∑', name:'summation', kw:['sigma','sum','math','greek','total'] },
+    { char:'√', name:'square root', kw:['square root','radical','math','√'] },
+    { char:'∫', name:'integral', kw:['integral','calculus','math','sum','∫'] },
+    { char:'∂', name:'partial differential', kw:['math','calculus','derivative','partial'] },
+    { char:'‰', name:'per mille', kw:['percent','thousand','per mille','math'] },
+    { char:'∠', name:'angle', kw:['math','geometry','angle','corner'] },
+    { char:'∴', name:'therefore', kw:['math','logic','therefore','proof'] },
+    { char:'∵', name:'because', kw:['math','logic','because','proof'] },
+    { char:'≡', name:'Identical To', kw:['math','equivalent','equal','congruent'] },
+    { char:'⊂', name:'Subset Of', kw:['math','logic','subset'] },
+    { char:'⊃', name:'Superset Of', kw:['math','logic','superset'] },
+    { char:'∩', name:'Intersection', kw:['math','logic','intersection','cap'] },
+    { char:'∪', name:'Union', kw:['math','logic','union','cup'] },
+    { char:'∀', name:'For All', kw:['math','logic','universal'] },
+    { char:'∃', name:'There Exists', kw:['math','logic','existential'] },
+    { char:'∅', name:'Empty Set', kw:['math','null','zero','void'] },
+    
+    // --- Greek Letters (Technical Use) ---
+    { char:'π', name:'pi', kw:['pi','math','circle','greek','3.14'] },
+    { char:'Ω', name:'omega', kw:['omega','greek','last','resistance','ohm','Ω'] },
+    { char:'Δ', name:'delta', kw:['delta','greek','change','triangle','Δ'] },
+    { char:'μ', name:'mu', kw:['mu','micro','greek','micrometer','μ'] },
+    { char:'α', name:'alpha', kw:['alpha','greek','first','math'] },
+    { char:'β', name:'beta', kw:['beta','greek','second','test'] },
+    { char:'γ', name:'gamma', kw:['gamma','greek','radiation','math'] },
+    { char:'θ', name:'theta', kw:['theta','greek','angle','geometry'] },
+    { char:'λ', name:'lambda', kw:['lambda','greek','wavelength','aws'] },
+    
+    // --- Currency Symbols ---
+    { char:'¤', name:'currency sign', kw:['currency','money','symbol','generic','coin'] },
+    { char:'¢', name:'cent sign', kw:['cent','currency','money','coin','change'] },
+    { char:'£', name:'pound sign', kw:['pound','uk','currency','money','gbp'] },
+    { char:'¥', name:'yen sign', kw:['yen','japan','china','currency','money','jpy'] },
+    { char:'€', name:'euro sign', kw:['euro','europe','currency','money','eur'] },
+    { char:'₹', name:'rupee sign', kw:['rupee','india','currency','money','inr'] },
+    { char:'₩', name:'won sign', kw:['won','korea','currency','money','krw'] },
+    { char:'₪', name:'shekel sign', kw:['shekel','israel','currency','money','ils'] },
+    { char:'₿', name:'bitcoin sign', kw:['bitcoin','crypto','btc','currency','digital'] },
+    
+    // --- Arrows & Directional Glyphs ---
+    { char:'→', name:'right arrow', kw:['arrow','right','forward','next','direction'] },
+    { char:'←', name:'left arrow', kw:['arrow','left','back','previous'] },
+    { char:'↑', name:'up arrow', kw:['arrow','up','top','raise'] },
+    { char:'↓', name:'down arrow', kw:['arrow','down','bottom','lower'] },
+    { char:'↔', name:'left right arrow', kw:['arrow','both','horizontal','width'] },
+    { char:'↕', name:'up down arrow', kw:['arrow','both','vertical','height'] },
+    { char:'↖', name:'north west arrow', kw:['arrow','diagonal','up','left'] },
+    { char:'↗', name:'north east arrow', kw:['arrow','diagonal','up','right'] },
+    { char:'↘', name:'south east arrow', kw:['arrow','diagonal','down','right'] },
+    { char:'↙', name:'south west arrow', kw:['arrow','diagonal','down','left'] },
+    { char:'⇄', name:'exchange arrows', kw:['arrow','swap','trade','exchange'] },
+    { char:'⇒', name:'double right arrow', kw:['arrow','double','imply','right'] },
+    { char:'➔', name:'heavy right arrow', kw:['arrow','thick','bold','right'] },
+    { char:'🔃', name:'Clockwise Refresh', kw:['refresh','reload','loop','turn'] },
+    { char:'↚', name:'Leftward Arrow Barred', kw:['arrow','cancel','stop'] },
+    { char:'↛', name:'Rightward Arrow Barred', kw:['arrow','cancel','stop'] },
+    { char:'↺', name:'Anticlockwise Top Gapped Arc', kw:['arrow','undo','back','reset'] },
+    { char:'↻', name:'Clockwise Top Gapped Arc', kw:['arrow','redo','forward','loop'] },
+    { char:'➔', name:'Heavy Right Arrow', kw:['arrow','bold','thick','direction'] },
+    
+    // --- Line Art UI Elements & Controls ---
+    { char:'☰', name:'Trigram Sky / Hamburger Menu', kw:['menu','hamburger','lines','nav','sidebar','list'] },
+    { char:'⚙', name:'Line Art Gear', kw:['gear','settings','config','setup','wheel','outline','cog','tech'] },
+    { char:'⚡', name:'Lightning Bolt', kw:['lightning','bolt','power','energy','flash'] },
+    { char:'✓', name:'Check Mark / Tick', kw:['check','tick','yes','correct','done','success'] },
+    { char:'✕', name:'Multiplication X / Close', kw:['cross','x','close','delete','cancel','remove'] },
+    { char:'🗙', name:'cancel cross', kw:['close','delete','remove','x','cancel'] },
+    { char:'✔', name:'check mark', kw:['check','tick','yes','correct','done'] },
+    { char:'⌛', name:'Hourglass', kw:['time','wait','loading','hourglass','clock'] },
+    
+    // --- Box-Drawing Bars & Decorative Borders ---
+    { char:'│', name:'Box Vertical Line', kw:['line','vertical','bar','border','divider'] },
+    { char:'─', name:'Box Horizontal Line', kw:['line','horizontal','bar','border','divider'] },
+    { char:'┌', name:'Box Top Left Corner', kw:['line','corner','border','top','left'] },
+    { char:'┐', name:'Box Top Right Corner', kw:['line','corner','border','top','right'] },
+    { char:'└', name:'Box Bottom Left Corner', kw:['line','corner','border','bottom','left'] },
+    { char:'┘', name:'Box Bottom Right Corner', kw:['line','corner','border','bottom','right'] },
+    { char:'┃', name:'Heavy Vertical Bar', kw:['line','vertical','thick','bold','divider'] },
+    { char:'━', name:'Heavy Horizontal Bar', kw:['line','horizontal','thick','bold','divider'] },
+    { char:'├', name:'Box Vertical Left Tee', kw:['line','border','tee','join'] },
+    { char:'┤', name:'Box Vertical Right Tee', kw:['line','border','tee','join'] },
+    { char:'┬', name:'Box Horizontal Top Tee', kw:['line','border','tee','join'] },
+    { char:'┴', name:'Box Horizontal Bottom Tee', kw:['line','border','tee','join'] },
+    { char:'┼', name:'Box Cross Intersection', kw:['line','border','cross','join','plus'] },
+
+    // --- Chess Pieces ---
+    { char:'♔', name:'white chess king', kw:['chess','king','white','game','piece'] },
+    { char:'♕', name:'white chess queen', kw:['chess','queen','white','game','piece'] },
+    { char:'♖', name:'white chess rook', kw:['chess','rook','castle','white','piece'] },
+    { char:'♗', name:'white chess bishop', kw:['chess','bishop','white','game','piece'] },
+    { char:'♘', name:'white chess knight', kw:['chess','knight','horse','white','piece'] },
+    { char:'♙', name:'white chess pawn', kw:['chess','pawn','white','game','piece'] },
+    { char:'♚', name:'black chess king', kw:['chess','king','black','game','piece'] },
+    { char:'♛', name:'black chess queen', kw:['chess','queen','black','game','piece'] },
+    { char:'♜', name:'black chess rook', kw:['chess','rook','castle','black','piece'] },
+    { char:'♞', name:'black chess knight', kw:['chess','knight','horse','black','piece'] },
+    
+    // --- Miscellaneous & Astrological Symbols ---
+    { char:'☀', name:'sun symbol', kw:['sun','weather','bright','day','light'] },
+    { char:'☁', name:'cloud symbol', kw:['cloud','weather','sky','cloudy'] },
+    { char:'☂', name:'umbrella symbol', kw:['umbrella','rain','weather','protection'] },
+    { char:'☃', name:'snowman symbol', kw:['snowman','winter','snow','cold'] },
+    { char:'⚓', name:'anchor symbol', kw:['anchor','ship','sea','navy','marine'] },
+    { char:'⚖', name:'scales symbol', kw:['scale','balance','law','justice','libra'] },
+    { char:'✉', name:'envelope symbol', kw:['mail','email','letter','message','send'] },
+    { char:'✂', name:'scissors symbol', kw:['scissors','cut','tool','shear'] },
+    { char:'✈', name:'airplane symbol', kw:['airplane','plane','flight','travel'] },
+    { char:'✌', name:'victory hand symbol', kw:['victory','peace','hand','two'] },
+    { char:'✏', name:'pencil symbol', kw:['pencil','write','edit','draw','tool'] },
+    { char:'✍', name:'writing hand symbol', kw:['hand','write','sign','signature'] },
+    { char:'✝', name:'Latin Cross', kw:['cross','religion','church','symbol'] },
+    { char:'☮', name:'Peace Symbol', kw:['peace','symbol','hippie','freedom'] },
+    { char:'☯', name:'Yin Yang', kw:['yin yang','balance','china','harmony'] },
+    { char:'♩', name:'Quarter Note', kw:['music','note','sound','audio'] },
+    { char:'♪', name:'Eighth Note', kw:['music','note','sound','audio','song'] },
+    { char:'♫', name:'Beamed Eighth Notes', kw:['music','notes','sound','audio','song','playlist'] }
+  ]
+},
+  {
+    id: 'flags',
+    label: 'Flags',
+    icon: '🏳️',
+    emojis: [
+      { char:'🏳️', name:'White Flag', kw:['white flag','peace','surrender','blank','wave'] },
+      { char:'🏴', name:'Black Flag', kw:['black flag','pirate','dark','blank'] },
+      { char:'🚩', name:'Red Flag', kw:['red flag','warning','warning sign','alert','danger','error'] },
+      { char:'🏁', name:'Checkered Flag', kw:['race','finish','checkered','winner','finish line','f1'] },
+      { char:'🎌', name:'Crossed Flags', kw:['japan','flags','crossed','symbol','celebrate'] },
+      { char:'🏴‍☠️', name:'Pirate Flag', kw:['pirate','skull','crossbones','jolly roger','sea'] },
+      { char:'🏳️‍🌈', name:'Rainbow Flag', kw:['pride','rainbow','lgbtq','gay','inclusion','flag'] },
+      { char:'🏳️‍⚧️', name:'Transgender Flag', kw:['trans','transgender','pride','inclusion','flag'] },
+      { char:'🇺🇸', name:'United States', kw:['usa','america','us','stars and stripes','american','flag'] },
+      { char:'🇬🇧', name:'United Kingdom', kw:['uk','britain','england','union jack','british','flag'] },
+      { char:'🇨🇦', name:'Canada', kw:['canada','maple leaf','canadian','flag','north america'] },
+      { char:'🇦🇺', name:'Australia', kw:['australia','aussie','oz','flag','kangaroo','continent'] },
+      { char:'🇩🇪', name:'Germany', kw:['germany','german','deutschland','flag','europe','black red gold'] },
+      { char:'🇫🇷', name:'France', kw:['france','french','paris','tricolor','flag','europe'] },
+      { char:'🇯🇵', name:'Japan', kw:['japan','japanese','rising sun','asia','flag','hinomaru'] },
+      { char:'🇰🇷', name:'South Korea', kw:['korea','south korea','korean','asia','flag','taegukgi'] },
+      { char:'🇨🇳', name:'China', kw:['china','chinese','prc','asia','flag','red star'] },
+      { char:'🇮🇳', name:'India', kw:['india','indian','hindi','ashoka','tricolor','flag','asia'] },
+      { char:'🇧🇷', name:'Brazil', kw:['brazil','brasil','brazilian','south america','flag'] },
+      { char:'🇲🇽', name:'Mexico', kw:['mexico','mexican','latin america','flag','eagle'] },
+      { char:'🇦🇷', name:'Argentina', kw:['argentina','argentinian','south america','flag','sun'] },
+      { char:'🇿🇦', name:'South Africa', kw:['south africa','rainbow nation','flag','africa','mandela'] },
+      { char:'🇳🇬', name:'Nigeria', kw:['nigeria','nigerian','africa','flag','green white'] },
+      { char:'🇪🇬', name:'Egypt', kw:['egypt','egyptian','africa','flag','pyramid','eagle'] },
+      { char:'🇸🇦', name:'Saudi Arabia', kw:['saudi arabia','saudi','arab','middle east','flag'] },
+      { char:'🇦🇪', name:'UAE', kw:['uae','dubai','emirates','arab','middle east','flag'] },
+      { char:'🇷🇺', name:'Russia', kw:['russia','russian','tricolor','flag','europe asia'] },
+      { char:'🇪🇸', name:'Spain', kw:['spain','spanish','espana','flag','europe','matador'] },
+      { char:'🇮🇹', name:'Italy', kw:['italy','italian','italia','flag','europe','tricolor'] },
+      { char:'🇵🇹', name:'Portugal', kw:['portugal','portuguese','flag','europe','iberia'] },
+      { char:'🇳🇱', name:'Netherlands', kw:['netherlands','dutch','holland','flag','europe','orange'] },
+      { char:'🇧🇪', name:'Belgium', kw:['belgium','belgian','flag','europe','chocolate'] },
+      { char:'🇨🇭', name:'Switzerland', kw:['switzerland','swiss','flag','cross','europe','neutral'] },
+      { char:'🇸🇪', name:'Sweden', kw:['sweden','swedish','flag','europe','scandinavian'] },
+      { char:'🇳🇴', name:'Norway', kw:['norway','norwegian','flag','europe','scandinavian','nordic'] },
+      { char:'🇩🇰', name:'Denmark', kw:['denmark','danish','flag','europe','scandinavian','nordics'] },
+      { char:'🇫🇮', name:'Finland', kw:['finland','finnish','flag','europe','nordic','sisu'] },
+      { char:'🇵🇱', name:'Poland', kw:['poland','polish','flag','europe','white red'] },
+      { char:'🇬🇷', name:'Greece', kw:['greece','greek','flag','europe','blue white','mediterranean'] },
+      { char:'🇹🇷', name:'Turkey', kw:['turkey','turkish','flag','europe','asia','crescent'] },
+      { char:'🇵🇰', name:'Pakistan', kw:['pakistan','pakistani','flag','crescent','asia'] },
+      { char:'🇧🇩', name:'Bangladesh', kw:['bangladesh','bengali','flag','asia','red circle'] },
+      { char:'🇮🇩', name:'Indonesia', kw:['indonesia','indonesian','flag','red white','asia'] },
+      { char:'🇵🇭', name:'Philippines', kw:['philippines','filipino','flag','asia','sun','stars'] },
+      { char:'🇻🇳', name:'Vietnam', kw:['vietnam','vietnamese','flag','asia','red star'] },
+      { char:'🇹🇭', name:'Thailand', kw:['thailand','thai','flag','asia','tricolor','elephant'] },
+      { char:'🇲🇾', name:'Malaysia', kw:['malaysia','malaysian','flag','asia','stripes','moon'] },
+      { char:'🇸🇬', name:'Singapore', kw:['singapore','singaporean','flag','asia','lion','crescent'] },
+      { char:'🇳🇿', name:'New Zealand', kw:['new zealand','kiwi','flag','pacific','stars','union jack'] },
+      { char:'🇮🇱', name:'Israel', kw:['israel','israeli','flag','middle east','star of david','blue'] },
+      { char:'🇨🇴', name:'Colombia', kw:['colombia','colombian','flag','south america','yellow blue red'] },
+      { char:'🇨🇱', name:'Chile', kw:['chile','chilean','flag','south america','star'] },
+      { char:'🇵🇪', name:'Peru', kw:['peru','peruvian','flag','south america','red white'] },
+      { char:'🇰🇪', name:'Kenya', kw:['kenya','kenyan','flag','africa','maasai','shield'] },
+      { char:'🇬🇭', name:'Ghana', kw:['ghana','ghanaian','flag','africa','black star'] },
+      { char:'🇪🇹', name:'Ethiopia', kw:['ethiopia','ethiopian','flag','africa','green yellow red','lion'] },
+      { char:'🇺🇦', name:'Ukraine', kw:['ukraine','ukrainian','flag','europe','blue yellow','sunflower'] },
+      { char:'🇵🇱', name:'Poland', kw:['poland','polish','flag','europe','white red'] },
+      { char:'🇨🇿', name:'Czech Republic', kw:['czech','czechia','bohemia','flag','europe'] },
+      { char:'🇭🇺', name:'Hungary', kw:['hungary','hungarian','flag','europe','tricolor'] },
+      { char:'🇷🇴', name:'Romania', kw:['romania','romanian','flag','europe','tricolor'] },
+      { char:'🇧🇬', name:'Bulgaria', kw:['bulgaria','bulgarian','flag','europe','white green red'] },
+      { char:'🇦🇹', name:'Austria', kw:['austria','austrian','flag','europe','red white','lederhosen'] },
+      { char:'🇮🇪', name:'Ireland', kw:['ireland','irish','flag','europe','celtic','green'] },
+      { char:'🇵🇷', name:'Puerto Rico', kw:['puerto rico','boricua','flag','caribbean','usa','island'] },
+      { char:'🇨🇺', name:'Cuba', kw:['cuba','cuban','flag','caribbean','star','red white blue'] },
+      { char:'🇯🇲', name:'Jamaica', kw:['jamaica','jamaican','reggae','flag','caribbean','green gold black'] },
+      { char:'🇮🇸', name:'Iceland', kw:['iceland','icelandic','flag','nordic','scandinavian','cross'] },
+    ]
+  },
+];
+
+/* ============================================================
+   STATE & UTILITIES
+   ============================================================ */
+const MAX_RECENT = 20;
+const STORAGE_KEY_RECENT   = 'iconcopy_recent_v1';
+const STORAGE_KEY_THEME    = 'iconcopy_theme_v1';
+const STORAGE_KEY_COPIED   = 'iconcopy_copied_today_v1';
+let   recentlyUsed         = [];
+let   copiedTodayCount     = 0;
+let   searchTimeout        = null;
+let   activeSection        = null;
+
+/* ============================================================
+   THEME
+   ============================================================ */
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY_THEME) ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(saved);
+}
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(STORAGE_KEY_THEME, next);
+  applyTheme(next);
+});
+
+/* ============================================================
+   CLIPBOARD
+   ============================================================ */
+async function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } else {
+      // Fallback for non-secure contexts
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }
+  } catch { return false; }
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function showToast(emoji, name) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span class="toast-emoji">${emoji}</span> Copied <strong>${name}</strong>!`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add('out');
+    toast.addEventListener('animationend', () => toast.remove(), { once: true });
+  }, 2000);
+}
+
+/* ============================================================
+   RECENTLY USED
+   ============================================================ */
+function loadRecentlyUsed() {
+  try {
+    recentlyUsed = JSON.parse(localStorage.getItem(STORAGE_KEY_RECENT)) || [];
+  } catch { recentlyUsed = []; }
+}
+
+function saveRecentlyUsed() {
+  localStorage.setItem(STORAGE_KEY_RECENT, JSON.stringify(recentlyUsed));
+}
+
+function addToRecent(emojiObj) {
+  // Remove if already exists (bubble to top)
+  recentlyUsed = recentlyUsed.filter(e => e.char !== emojiObj.char);
+  recentlyUsed.unshift({ char: emojiObj.char, name: emojiObj.name });
+  if (recentlyUsed.length > MAX_RECENT) recentlyUsed = recentlyUsed.slice(0, MAX_RECENT);
+  saveRecentlyUsed();
+  renderRecentlyUsed();
+}
+
+function renderRecentlyUsed() {
+  const grid   = document.getElementById('recently-grid');
+  const empty  = document.getElementById('recently-empty');
+  const badge  = document.getElementById('recently-badge');
+  badge.textContent = recentlyUsed.length;
+
+  if (recentlyUsed.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.style.display  = 'grid';
+  grid.innerHTML = recentlyUsed
+    .map(e => buildEmojiCard(e, true))
+    .join('');
+  attachCardListeners(grid);
+}
+
+/* ============================================================
+   COPY COUNT
+   ============================================================ */
+function initCopiedCount() {
+  const today = new Date().toDateString();
+  try {
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY_COPIED));
+    if (stored && stored.date === today) {
+      copiedTodayCount = stored.count;
+    } else {
+      copiedTodayCount = 0;
+    }
+  } catch { copiedTodayCount = 0; }
+  updateCopiedStat();
+}
+
+function incrementCopiedCount() {
+  copiedTodayCount++;
+  const today = new Date().toDateString();
+  localStorage.setItem(STORAGE_KEY_COPIED, JSON.stringify({ date: today, count: copiedTodayCount }));
+  updateCopiedStat();
+}
+
+function updateCopiedStat() {
+  const el    = document.getElementById('copied-stat');
+  const count = document.getElementById('copied-count-stat');
+  if (copiedTodayCount > 0) {
+    el.style.display = 'flex';
+    count.textContent = copiedTodayCount;
+  }
+}
+
+/* ============================================================
+   BUILD CARD HTML
+   ============================================================ */
+function buildEmojiCard(emojiObj, hideTooltip = false) {
+  const safeChar  = emojiObj.char.replace(/&/g,'&amp;');
+  const safeName  = emojiObj.name.replace(/&/g,'&amp;');
+  return `<button
+    class="emoji-card"
+    data-emoji="${safeChar}"
+    data-name="${safeName}"
+    title="${safeName}"
+    aria-label="Copy ${safeName}"
+    type="button">
+    <span class="emoji-char">${safeChar}</span>
+    ${hideTooltip ? '' : `<span class="emoji-name">${safeName}</span>`}
+  </button>`;
+}
+
+/* ============================================================
+   ATTACH CARD CLICK LISTENERS
+   ============================================================ */
+function attachCardListeners(container) {
+  container.querySelectorAll('.emoji-card').forEach(card => {
+    card.addEventListener('click', handleCardClick);
+  });
+}
+
+async function handleCardClick(e) {
+  const card  = e.currentTarget;
+  const char  = card.dataset.emoji;
+  const name  = card.dataset.name;
+  const ok    = await copyToClipboard(char);
+  if (!ok) return;
+
+  // Visual feedback
+  card.classList.add('copied');
+  setTimeout(() => card.classList.remove('copied'), 500);
+
+  showToast(char, name);
+  addToRecent({ char, name });
+  incrementCopiedCount();
+}
+
+/* ============================================================
+   RENDER CATEGORIES
+   ============================================================ */
+function renderCategories() {
+  const container = document.getElementById('categories-container');
+  const nav       = document.getElementById('sidebar-nav');
+  let totalCount  = 0;
+
+  EMOJI_DATA.forEach(cat => {
+    totalCount += cat.emojis.length;
+
+    // Sidebar nav item
+    const btn = document.createElement('button');
+    btn.className    = 'nav-item';
+    btn.dataset.catId = cat.id;
+    btn.innerHTML = `
+      <span class="nav-item-icon">${cat.icon}</span>
+      <span>${cat.label}</span>
+      <span class="nav-item-count">${cat.emojis.length}</span>
+    `;
+    btn.addEventListener('click', () => {
+      document.getElementById('cat-' + cat.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Close sidebar on mobile
+      closeSidebar();
+    });
+    nav.appendChild(btn);
+
+    // Category section
+    const section = document.createElement('section');
+    section.className   = 'emoji-section';
+    section.id          = 'cat-' + cat.id;
+    section.dataset.catId = cat.id;
+    section.innerHTML   = `
+      <div class="section-header">
+        <span class="section-title">${cat.icon} ${cat.label}</span>
+        <span class="section-badge">${cat.emojis.length}</span>
+      </div>
+      <div class="emoji-grid">${cat.emojis.map(e => buildEmojiCard(e)).join('')}</div>
+    `;
+    attachCardListeners(section);
+    container.appendChild(section);
+  });
+
+  document.getElementById('total-count').textContent = totalCount.toLocaleString();
+  document.getElementById('cat-count').textContent   = EMOJI_DATA.length;
+}
+
+/* ============================================================
+   SIDEBAR ACTIVE STATE (Intersection Observer)
+   ============================================================ */
+function initSidebarObserver() {
+  const sections = document.querySelectorAll('.emoji-section[data-cat-id]');
+  const navItems = document.querySelectorAll('.nav-item[data-cat-id]');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const catId = entry.target.dataset.catId;
+        navItems.forEach(n => n.classList.toggle('active', n.dataset.catId === catId));
+      }
+    });
+  }, { rootMargin: `-${document.querySelector('.header').offsetHeight + 16}px 0px -60% 0px` });
+
+  sections.forEach(s => observer.observe(s));
+}
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+function initSearch() {
+  const input     = document.getElementById('search-input');
+  const clearBtn  = document.getElementById('search-clear');
+  const catsCont  = document.getElementById('categories-container');
+  const searchSec = document.getElementById('search-results-section');
+  const recentSec = document.getElementById('recently-section');
+  const statRow   = document.getElementById('stat-row');
+  const grid      = document.getElementById('search-results-grid');
+  const badge     = document.getElementById('results-badge');
+
+  function performSearch(query) {
+    query = query.trim().toLowerCase();
+
+    if (!query) {
+      searchSec.classList.remove('visible');
+      catsCont.style.display     = '';
+      recentSec.style.display    = '';
+      statRow.style.display      = '';
+      return;
+    }
+
+    searchSec.classList.add('visible');
+    catsCont.style.display     = 'none';
+    recentSec.style.display    = 'none';
+    statRow.style.display      = 'none';
+
+    // Collect all emojis and score
+    const results = [];
+    EMOJI_DATA.forEach(cat => {
+      cat.emojis.forEach(e => {
+        let score = 0;
+        const name = e.name.toLowerCase();
+        if (name === query)                          score = 100;
+        else if (name.startsWith(query))            score = 80;
+        else if (name.includes(query))              score = 60;
+        else if (e.char === query)                  score = 100;
+        else if (e.kw.some(k => k === query))       score = 50;
+        else if (e.kw.some(k => k.startsWith(query))) score = 35;
+        else if (e.kw.some(k => k.includes(query))) score = 20;
+        else if (cat.label.toLowerCase().includes(query)) score = 10;
+        if (score > 0) results.push({ ...e, score });
+      });
+    });
+
+    results.sort((a, b) => b.score - a.score);
+    badge.textContent = results.length;
+
+    if (results.length === 0) {
+      grid.innerHTML = `
+        <div class="no-results" style="grid-column:1/-1">
+          <span class="no-results-emoji">🔍</span>
+          <div class="no-results-title">No emojis found for "${query}"</div>
+          <div class="no-results-sub">Try a different keyword or browse the categories</div>
+        </div>`;
+    } else {
+      grid.innerHTML = results.map(e => buildEmojiCard(e)).join('');
+      attachCardListeners(grid);
+    }
+  }
+
+  input.addEventListener('input', () => {
+    const val = input.value;
+    clearBtn.classList.toggle('visible', val.length > 0);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => performSearch(val), 80);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    clearBtn.classList.remove('visible');
+    performSearch('');
+    input.focus();
+  });
+}
+
+/* ============================================================
+   MOBILE SIDEBAR
+   ============================================================ */
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+
+document.getElementById('sidebar-toggle').addEventListener('click', () => {
+  const sidebar  = document.getElementById('sidebar');
+  const overlay  = document.getElementById('sidebar-overlay');
+  const isOpen   = sidebar.classList.toggle('open');
+  overlay.classList.toggle('visible', isOpen);
+});
+
+document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(function init() {
+  initTheme();
+  loadRecentlyUsed();
+  initCopiedCount();
+  renderCategories();
+  renderRecentlyUsed();
+  initSearch();
+  // Observer needs a tick for DOM to settle
+  requestAnimationFrame(() => requestAnimationFrame(initSidebarObserver));
+})();
+</script>
+</body>
+</html>
