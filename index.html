@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IconCopy — Click. Copy. Paste.</title>
   <meta name="description" content="The cleanest emoji copy tool on the web. Search, click, and copy any emoji instantly." />
+<script>
+  // Agar URL me index.html aata hai toh use automatic "/" par redirect karega
+  if (window.location.pathname.endsWith('/index.html')) {
+    const newPath = window.location.pathname.replace(/\/index.html$/, '/');
+    window.location.replace(window.location.origin + newPath + window.location.search + window.location.hash);
+  }
+</script>
+  
+  <link rel="canonical" href="https://iconcopy.github.io/" />
+  
   <style>
     /* ============================================================
        DESIGN TOKENS
