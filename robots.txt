@@ -1,0 +1,10 @@
+# Global Web Crawlers Config
+User-agent: *
+Allow: /
+
+# Google AdSense Crawler Optimization
+User-agent: Mediapartners-Google
+Allow: /
+
+# Sitemap Index Link Location (Updated for GitHub Pages)
+Sitemap: https://iconcopy.github.io/sitemap.xml
